@@ -14,7 +14,7 @@ Normalize images
 """
 
 images = np.load(str(pathlib.Path().parent.resolve()) + "\\data\\IMAGES.npy")
-attributes = np.load(str(pathlib.Path().parent.resolve()) + "\\data\\ATTRIBUTES.npy")
+attributes = np.load(str(pathlib.Path().parent.resolve()) + "\\data\\ATTRIBUTS.npy")
 log_config("load_data")
 
 
@@ -24,7 +24,10 @@ class LoadData :
         if train_size < 0 or validation_size < 0 or test_size < 0 : 
             debug ("Split ratio dataset must be > 0 ")
             raise Exception ("Split ratio dataset must be > 0 ")
-        if train_size + validation_size + test_size != 1:
+        if train_size + validation_size + test_size > 1:
+            debug("Sum of split ratio must be equal to 1")
+            raise Exception ("Sum of split ratio must be equal to 1")
+        if train_size + validation_size + test_size != 1 :
             warning ("Sum of split ratio must be equal to 1")
         if validation_size == 0: 
             warning("Ratio validation is 0")
