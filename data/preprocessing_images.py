@@ -65,7 +65,7 @@ def preprocessing_images ():
 
     # Saving this image
     try : 
-        np.save(PATH + "\\IMAGES", data_images)
+        np.save(PATH + "\\IMAGES", data_images[:8000])
         info("Model saved correctly")
     except : 
        debug("Images are not saved")
@@ -86,7 +86,7 @@ def preprocessing_labels():
         else:
             list_data = np.array(attr_lines[i].replace('-1','0').replace('  ',' ').replace(',','').split()).reshape(1,-1)[0]
         matdata.append(list_data)
-        info("Attributes values added correctly")
+        info("Attributs values added correctly")
 
     # to save as npy
 
@@ -95,7 +95,7 @@ def preprocessing_labels():
         raise Exception (f"Found {matdata.shape}, must have {(202598,41)} ")
         
     np.save(f'{os.getcwd()}/data/ATTRIBUTS.npy',np.array(matdata))
-    info("ATTRIBUTES.npy saved correctly")
+    info("ATTRIBUTS.npy saved correctly")
     
     # to save as csv
     with open('./data/list_attr_celebatest.csv', 'a', newline='') as f_object:  
@@ -106,7 +106,7 @@ def preprocessing_labels():
         writer_object.writerow(list_data)  
         # Close the file object
         f_object.close()
-    info("ATTRIBUTES.csv saved correctly")
+    info("ATTRIBUTS.csv saved correctly")
 
 
 
