@@ -72,24 +72,41 @@ def preprocessing_images ():
 
     
 def preprocessing_labels():
-    N_IMAGES = 202599
-    dataset_table = f'{os.getcwd()}/data/list_attr_celeba.txt'
+
+    dataset_table = f'{os.getcwd()}/data/Anno/list_attr_celeba.txt'
     attr_lines = [line.rstrip() for line in open(dataset_table, 'r')]
     attr_keys = 'file_name' + ' '+ attr_lines[1]
-
-    for i in range(1,N_IMAGES):
+    matdata = []
+    for i in range(1,Nbr_images):
+        # Add the header
         if i == 1:
             list_data = np.array(attr_keys.replace('  ',' ').replace(',','').split()).reshape(1,-1)[0]
+            info("Header added correctly")
+        # Add the attributs values
         else:
             list_data = np.array(attr_lines[i].replace('-1','0').replace('  ',' ').replace(',','').split()).reshape(1,-1)[0]
-        with open('./data/list_attr_celeba.csv', 'a', newline='') as f_object:  
-            # Pass the CSV  file object to the writer() function
-            writer_object = writer(f_object)
-            # Result - a writer object
-            # Pass the data in the list as an argument into the writerow() function
-            writer_object.writerow(list_data)  
-            # Close the file object
-            f_object.close()
+        matdata.append(list_data)
+        info("Attributes values added correctly")
+
+    # to save as npy
+
+    if matdata.shape != (202598,41):
+        debug(f"Found {matdata.shape}, must have {(202598,41)} ")
+        raise Exception (f"Found {matdata.shape}, must have {(202598,41)} ")
+        
+    np.save(f'{os.getcwd()}/data/ATTRIBUTS.npy',np.array(matdata))
+    info("ATTRIBUTES.npy saved correctly")
+    
+    # to save as csv
+    with open('./data/list_attr_celebatest.csv', 'a', newline='') as f_object:  
+        # Pass the CSV  file object to the writer() function
+        writer_object = writer(f_object)
+        # Result - a writer object
+        # Pass the data in the list as an argument into the writerow() function
+        writer_object.writerow(list_data)  
+        # Close the file object
+        f_object.close()
+    info("ATTRIBUTES.csv saved correctly")
 
 
 
