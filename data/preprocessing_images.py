@@ -4,6 +4,7 @@ import matplotlib.image as mpimg
 import pathlib
 import os
 import sys
+from csv import writer
 import tensorflow as tf
 PARENT_PATH = str(pathlib.Path().parent.resolve())
 sys.path.append(PARENT_PATH + "\\cfg")
@@ -68,13 +69,32 @@ def preprocessing_images ():
         info("Model saved correctly")
     except : 
        debug("Images are not saved")
-    
 
+    
+def preprocessing_labels():
+    N_IMAGES = 202599
+    dataset_table = f'{os.getcwd()}/data/list_attr_celeba.txt'
+    attr_lines = [line.rstrip() for line in open(dataset_table, 'r')]
+    attr_keys = 'file_name' + ' '+ attr_lines[1]
+
+    for i in range(1,N_IMAGES):
+        if i == 1:
+            list_data = np.array(attr_keys.replace('  ',' ').replace(',','').split()).reshape(1,-1)[0]
+        else:
+            list_data = np.array(attr_lines[i].replace('-1','0').replace('  ',' ').replace(',','').split()).reshape(1,-1)[0]
+        with open('./data/list_attr_celeba.csv', 'a', newline='') as f_object:  
+            # Pass the CSV  file object to the writer() function
+            writer_object = writer(f_object)
+            # Result - a writer object
+            # Pass the data in the list as an argument into the writerow() function
+            writer_object.writerow(list_data)  
+            # Close the file object
+            f_object.close()
 
 
 
 if __name__ == '__main__':
     preprocessing_images()
-
+    preprocessing_labels()
 
 
