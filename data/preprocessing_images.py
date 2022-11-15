@@ -16,15 +16,14 @@ The purpose is to crop images and resize them to (256 x 256)
 """
 
 PATH = PARENT_PATH + "\\data"
-Nbr_images = 202599
+Nbr_images = 40000
 SIZE_IMG = 256
 
-log_config("preprocessing_images")
 
 def preprocessing_images ():
-
+    log_config("preprocessing_images")
     #verifying if all images are in data
-    if len(os.listdir(PATH + "\\img_align_celeba")) != Nbr_images:
+    if len(os.listdir(PATH + "\\img_align_celeba")) <  Nbr_images:
         debug("You do not have all images ! Please Check")
         return
     else: 
@@ -72,12 +71,12 @@ def preprocessing_images ():
 
     
 def preprocessing_labels():
-
+    log_config("preprocessing_labels")
     dataset_table = f'{os.getcwd()}/data/Anno/list_attr_celeba.txt'
     attr_lines = [line.rstrip() for line in open(dataset_table, 'r')]
     attr_keys = 'file_name' + ' '+ attr_lines[1]
     matdata = []
-    for i in range(1,Nbr_images):
+    for i in range(1,Nbr_images+1):
         # Add the header
         if i == 1:
             list_data = np.array(attr_keys.replace('  ',' ').replace(',','').split()).reshape(1,-1)[0]
@@ -88,30 +87,28 @@ def preprocessing_labels():
         matdata.append(list_data)
         info("Attributs values added correctly")
 
-    # to save as npy
+        # to save as csv
+        with open('./data/list_attr_celebatest.csv', 'a', newline='') as f_object:  
+            # Pass the CSV  file object to the writer() function
+            writer_object = writer(f_object)
+            # Result - a writer object
+            # Pass the data in the list as an argument into the writerow() function
+            writer_object.writerow(list_data)  
+            # Close the file object
+            f_object.close()
+        info("ATTRIBUTS.csv saved correctly")
 
-    if matdata.shape != (202598,41):
-        debug(f"Found {matdata.shape}, must have {(202598,41)} ")
-        raise Exception (f"Found {matdata.shape}, must have {(202598,41)} ")
+    # to save as npy
+    matdata = np.array(matdata)
+    if matdata.shape != (Nbr_images,41):
+        debug(f"Found {matdata.shape}, must have {(Nbr_images,41)} ")
+        raise Exception (f"Found {matdata.shape}, must have {(Nbr_images,41)} ")
         
     np.save(f'{os.getcwd()}/data/ATTRIBUTS.npy',np.array(matdata))
     info("ATTRIBUTS.npy saved correctly")
-    
-    # to save as csv
-    with open('./data/list_attr_celebatest.csv', 'a', newline='') as f_object:  
-        # Pass the CSV  file object to the writer() function
-        writer_object = writer(f_object)
-        # Result - a writer object
-        # Pass the data in the list as an argument into the writerow() function
-        writer_object.writerow(list_data)  
-        # Close the file object
-        f_object.close()
-    info("ATTRIBUTS.csv saved correctly")
 
 
 
 if __name__ == '__main__':
-    preprocessing_images()
+    # preprocessing_images()
     preprocessing_labels()
-
-
