@@ -50,7 +50,7 @@ class LoadData :
         
 
     def normalize (self):
-        return self.split_data()[0] / 255.0 , self.split_data()[1] / 255.0 , self.split_data()[2] / 255.0 
+        return self.split_data()[0]/127.5 - 1 , self.split_data()[1]/127.5 - 1 , self.split_data()[2]/127.5 - 1
 
 
     def get_data(self):
