@@ -16,14 +16,15 @@ The purpose is to crop images and resize them to (256 x 256)
 """
 
 PATH = PARENT_PATH + "\\data"
-Nbr_images = 40000
+Nbr_images = 202598
 SIZE_IMG = 256
 
+log_config("preprocessing_images")
 
 def preprocessing_images ():
-    log_config("preprocessing_images")
+
     #verifying if all images are in data
-    if len(os.listdir(PATH + "\\img_align_celeba")) <  Nbr_images:
+    if len(os.listdir(PATH + "\\img")) != Nbr_images:
         debug("You do not have all images ! Please Check")
         return
     else: 
@@ -31,12 +32,12 @@ def preprocessing_images ():
 
     print("############ Reading images ##############")
     read_img = []
-    for i in range (1, Nbr_images + 1) :
-        if i % 10000 == 0:
+    for i in range (1, Nbr_images) :
+        if i % 500 == 0:
             print('iteration :',i)
         read_img.append(mpimg.imread(PATH + "\\img_align_celeba\\%06i.jpg" % i)[20:-20])     # %06i% means that we have a number of 6 digits | we do [20 : -20] to crop images into 178 x 178
 
-    if len(read_img) != Nbr_images:
+    if len(read_img) < Nbr_images:
         debug(f"Found {len(read_img)}, must have {Nbr_images} ")
         raise Exception (f"Found {len(read_img)}, must have {Nbr_images} ")
     else: 
@@ -46,7 +47,7 @@ def preprocessing_images ():
     print('############# Resizing Images #############')
     resize_img = []
     for i,img in enumerate(read_img): 
-        if i % 10000 == 0:
+        if i % 500 == 0:
             print('iteration :',i)
 
         if img.shape != (178,178,3):
@@ -59,24 +60,26 @@ def preprocessing_images ():
 
     images = np.array(resize_img)
     info("All images are resized")
-    data_images = tf.convert_to_tensor(images, np.float32)
-    assert data_images.shape == (Nbr_images, SIZE_IMG, SIZE_IMG, 3)
+    # data_images = tf.convert_to_tensor(images, np.float32)
+    # assert data_images.shape == (Nbr_images, SIZE_IMG, SIZE_IMG, 3)
 
     # Saving this image
     try : 
-        np.save(PATH + "\\IMAGES", data_images[:8000])
+        np.save(PATH + "\\IMAGES2", images)
         info("Model saved correctly")
     except : 
        debug("Images are not saved")
+    
+    return images
 
     
 def preprocessing_labels():
-    log_config("preprocessing_labels")
+
     dataset_table = f'{os.getcwd()}/data/Anno/list_attr_celeba.txt'
     attr_lines = [line.rstrip() for line in open(dataset_table, 'r')]
     attr_keys = 'file_name' + ' '+ attr_lines[1]
     matdata = []
-    for i in range(1,Nbr_images+1):
+    for i in range(1,Nbr_images):
         # Add the header
         if i == 1:
             list_data = np.array(attr_keys.replace('  ',' ').replace(',','').split()).reshape(1,-1)[0]
@@ -87,28 +90,28 @@ def preprocessing_labels():
         matdata.append(list_data)
         info("Attributs values added correctly")
 
-        # to save as csv
-        with open('./data/list_attr_celebatest.csv', 'a', newline='') as f_object:  
-            # Pass the CSV  file object to the writer() function
-            writer_object = writer(f_object)
-            # Result - a writer object
-            # Pass the data in the list as an argument into the writerow() function
-            writer_object.writerow(list_data)  
-            # Close the file object
-            f_object.close()
-        info("ATTRIBUTS.csv saved correctly")
-
     # to save as npy
-    matdata = np.array(matdata)
-    if matdata.shape != (Nbr_images,41):
-        debug(f"Found {matdata.shape}, must have {(Nbr_images,41)} ")
-        raise Exception (f"Found {matdata.shape}, must have {(Nbr_images,41)} ")
+
+    if matdata.shape != (202598,41):
+        debug(f"Found {matdata.shape}, must have {(202598,41)} ")
+        raise Exception (f"Found {matdata.shape}, must have {(202598,41)} ")
         
     np.save(f'{os.getcwd()}/data/ATTRIBUTS.npy',np.array(matdata))
     info("ATTRIBUTS.npy saved correctly")
+    
+    # to save as csv
+    with open('./data/list_attr_celebatest.csv', 'a', newline='') as f_object:  
+        # Pass the CSV  file object to the writer() function
+        writer_object = writer(f_object)
+        # Result - a writer object
+        # Pass the data in the list as an argument into the writerow() function
+        writer_object.writerow(list_data)  
+        # Close the file object
+        f_object.close()
+    info("ATTRIBUTS.csv saved correctly")
 
 
 
 if __name__ == '__main__':
-    # preprocessing_images()
+    preprocessing_images()
     preprocessing_labels()
