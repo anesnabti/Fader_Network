@@ -8,6 +8,7 @@ def plot_images(x,y=None, indices='all', columns=12, x_size=1, y_size=1,
                 cm='binary',y_padding=0.35, spines_alpha=1,
                 fontsize=20, save_as='auto'):
     """
+    Plot original images
     Show some images in a grid, with legends
     args:
         x             : images - Shapes must be (-1,lx,ly) (-1,lx,ly,1) or (-1,lx,ly,3)
