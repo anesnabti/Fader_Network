@@ -28,18 +28,14 @@ class GAN():
 
     def __init__(self,num_attribut_modif,valeur):
  
-        if all(num_attribut_modif>-1) and all(num_attribut_modif<41) and all(int(num_attribut_modif)==num_attribut_modif):
+        if all(num_attribut_modif>-1) and all(num_attribut_modif<40) and all(int(num_attribut_modif)==num_attribut_modif):
             if all(valeur>-1) and all(valeur<2) and all(valeur==int(valeur)): 
                 self.num_attribut_modif=num_attribut_modif
                 self.valeur=valeur
 
-        self.optimizer = Adam(0.002, 0.5)
-        self.lambda_e=0
+        self.lambda_e=0.002
+        self.optimizer = Adam(self.lambda_e, 0.5)
         self.batch_size=32
-        
-        self.theta_dis=0
-        self.theta_enc=0
-        self.theta_dec=0
 
         
     def augmented_data(self,x):
@@ -84,7 +80,7 @@ class GAN():
 
         xx=2
         yy=2
-        y=tf.reshape(y, [-1, xx, yy, 2*80])
+        y=tf.reshape(y, [-1, xx, yy, 2*40])
         
         z=tf.concat([z,y],3)
         z=Conv2DTranspose(512, (4,4),strides=(1,1),padding=(1,1))(z)
@@ -95,7 +91,7 @@ class GAN():
         
         for n in nb_filter:
             y= tf.concat([y]*4,axis=1)
-            y=Reshape(y, [-1, xx, yy, 2*80])
+            y=Reshape(y, [-1, xx, yy, 2*40])
             
             z=tf.concat([z,y],3)
             z=Conv2DTranspose(n, (4,4),strides=(2,2),padding=(1,1))(z)
@@ -118,26 +114,15 @@ class GAN():
     #cette fonction permet de recupérer le y à partir de z
     def discriminateur(self,z):
         
-        z=Conv2DTranspose(512, (4,4),strides=(1,1),padding=(1,1))(z)
+        z=Conv2DTranspose(512, (4,4),strides=(2,2),padding=(1,1))(z)
         z=BatchNormalization()(z)
         z=Activation('relu')(z)
-        
-        nb_filter=[512,256,128,64,32,16]
-        
-        for n in nb_filter:
-
-            z=Conv2DTranspose(n, (4,4),strides=(2,2),padding=(1,1))(z)
-            z=BatchNormalization()(z)
-            z=Activation('relu')(z)
-  
-
-        z=Conv2DTranspose(1, (4,4),strides=(2,2),padding=(1,1))(z)
         
         #il n'y pas de dropout dans le discriminateur pour le model original
         #d'après l'article, il permet d'augmenter de façon significatif les performances
         z = Dropout(rate=0.3)(z)
             
-        z=Dense(512, input_shape=(1,), activation=None)(z)
+        z=Dense(512, input_shape=(512,), activation=None)(z)
         z=LeakyReLU(alpha=0.2)
         z=Dense(40, input_shape=(512,), activation=None)(z)
         
@@ -170,6 +155,7 @@ class GAN():
         for epoch in range(epochs):
         
             self.lambda_e=self.lambda_e + 0.00001/500000
+            self.optimizer = Adam(self.lambda_e, 0.5)
             
             x=self.augmented_data(self,x)
             y_modif=modification_y(self,y)
