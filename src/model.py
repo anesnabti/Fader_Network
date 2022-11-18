@@ -33,8 +33,8 @@ class GAN():
                 self.num_attribut_modif=num_attribut_modif
                 self.valeur=valeur
 
-        self.lambda_e=0.002
-        self.optimizer = Adam(self.lambda_e, 0.5)
+        self.lambda_e=0
+        self.optimizer = Adam(0.002, 0.5)
         self.batch_size=32
 
         
@@ -68,14 +68,12 @@ class GAN():
     def modification_y(self,y):
         for i in range(len(self.num_attribut_modif)):
             y[self.num_attribut_modif[i]]=self.valeur[i]
-        
-        y_modif=tf.keras.utils.to_categorical(y, num_classes=2)
-        
-        return y_modif
+        return y
     
     #cette fonction permet de générer l'image avec le y voulu
-    def decoder(self,z,y_modif):
-        y=y_modif
+    def decoder(self,z,y):
+        y=self.modification_y(y)
+        y=tf.keras.utils.to_categorical(y, num_classes=2)
         y=tf.transpose(tf.stack([y]*4),[1, 0, 2])
 
         xx=2
@@ -155,7 +153,6 @@ class GAN():
         for epoch in range(epochs):
         
             self.lambda_e=self.lambda_e + 0.00001/500000
-            self.optimizer = Adam(self.lambda_e, 0.5)
             
             x=self.augmented_data(self,x)
             y_modif=modification_y(self,y)
