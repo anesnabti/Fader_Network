@@ -54,10 +54,9 @@ class GAN():
         
         
         for i in nb_filter:  
-            
-        	x=Conv2D(i, (4,4),strides=(2,2),padding=(1,1))(x)
-        	x=BatchNormalization()(x)
-        	x=LeakyReLU(alpha=0.2)(x)
+            x=Conv2D(i, (4,4),strides=(2,2),padding=(1,1))(x)
+            x=BatchNormalization()(x)
+            x=LeakyReLU(alpha=0.2)(x)
         
         x=Conv2D(512, (4,4),strides=(1,1),padding=(1,1))(x)
         x=BatchNormalization()(x)
@@ -148,34 +147,34 @@ class GAN():
         return self.loss_ae(self,x,x2)+self.lambda_e*self.loss_dis(self,y,1-prediction_y)
         
             
-    def train(self, epochs, batch_size,x, y):
+    # def train(self, epochs, batch_size,x, y):
 
-        for epoch in range(epochs):
+    #     for epoch in range(epochs):
         
-            self.lambda_e=self.lambda_e + 0.00001/500000
+    #         self.lambda_e=self.lambda_e + 0.00001/500000
             
-            x=self.augmented_data(self,x)
-            y_modif=modification_y(self,y)
+    #         x=self.augmented_data(self,x)
+    #         y_modif=modification_y(self,y)
             
-            model_gan=self.decoder(self.encoder(x),y_modif)
+    #         model_gan=self.decoder(self.encoder(x),y_modif)
             
-            model_gan.compile(loss=self.loss,optimizer=self.optimizer,metrics=['accuracy'])
+    #         model_gan.compile(loss=self.loss,optimizer=self.optimizer,metrics=['accuracy'])
             
-            model_dis=self.discriminateur(self.encoder(x))
+    #         model_dis=self.discriminateur(self.encoder(x))
             
-            model_dis.compile(loss=self.loss,optimizer=self.optimizer,metrics=['accuracy'])
+    #         model_dis.compile(loss=self.loss,optimizer=self.optimizer,metrics=['accuracy'])
             
-            #model.fit(train,validation_data=val,epochs=epoch)
+    #         #model.fit(train,validation_data=val,epochs=epoch)
 
         
-        return model_gan
+    #     return model_gan
 
 
 
 
-if __name__ == '__main__':
-    gan = GAN([6],[1])
-    model_gan=gan.train(epochs=30000, batch_size=32,x, y)
-    model_gan.predict(test)
+# if __name__ == '__main__':
+#     gan = GAN([6],[1])
+#     model_gan=gan.train(epochs=30000, batch_size=32,x, y)
+#     model_gan.predict(test)
             
         
