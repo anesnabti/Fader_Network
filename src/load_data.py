@@ -47,24 +47,70 @@ class LoadData :
         if not os.path.exists(validation_path):
             os.makedirs(validation_path)   
         
-        ############# Cpying image train in the folder ...//data//train
-        info("start copying train images in ...//data//train")
-        for i in range (1, int(Nbr_images*self.train_size) + 1):
-            cv2.imwrite(train_path + "\\%06i.jpg" % i, cv2.imread(PATH + "\\data\\img_align_celeba_resize\\%06i.jpg" % i))
-        info("Copying train images OK")
+        ############# Cpying train images in the folder ...//data//train
+        # info("start copying train images in ...//data//train")
+        # print("start copying train images in ...//data//train")
+        # for i in range (1, int(Nbr_images*self.train_size) + 1):
+        #     cv2.imwrite(train_path + "\\%06i.jpg" % i, cv2.imread(PATH + "\\data\\img_align_celeba_resize\\%06i.jpg" % i))
+        # info("Copying train images OK")
         
-        ############## Copying test images into ..//data//test
-        info("start copying test images in ...//data//test")
-        for i in range (int(Nbr_images*self.train_size) + 1, int(Nbr_images*self.train_size) + int(Nbr_images*self.test_size) + 1):
-            cv2.imwrite(test_path + "\\%06i.jpg" % i, (cv2.imread(PATH + "\\data\\img_align_celeba_resize\\%06i.jpg" % i)))
-        info("Copying test images OK")
+        # ############## Copying test images into ..//data//test
+        # info("start copying test images in ...//data//test")
+        # print("start copying test images in ...//data//test")
+        # for i in range (int(Nbr_images*self.train_size) + 1, int(Nbr_images*self.train_size) + int(Nbr_images*self.test_size) + 1):
+        #     cv2.imwrite(test_path + "\\%06i.jpg" % i, (cv2.imread(PATH + "\\data\\img_align_celeba_resize\\%06i.jpg" % i)))
+        # info("Copying test images OK")
 
         ############## Copying validation images in the folder ..//data//validation
-        info("start copying validation images in ...//data//test")
-        for i in range (int(Nbr_images*self.train_size) + int(Nbr_images*self.test_size) + 1, int(Nbr_images*self.train_size) + int(Nbr_images*self.test_size) + int(Nbr_images*self.validation_size) + 1):
+        info("start copying validation images in ...//data//validation")
+        print("start copying validation images in ...//data//validation")
+        for i in range (int(Nbr_images*self.train_size) + int(Nbr_images*self.test_size) + 1,Nbr_images + 1):
             cv2.imwrite(validation_path + "\\%06i.jpg" % i, (cv2.imread(PATH + "\\data\\img_align_celeba_resize\\%06i.jpg" % i)))
         info("Copying validation images OK")
 
+        attributes_title = []
+        for i in range (len(attributes[0])):
+            attributes_title.append(attributes[0][i])
+        info("Copying first line of the table OK")
+
+
+        info("start copying train images attributes in ...//data//train")
+        print("start copying train images attributes in ...//data//train")
+        train_images_attributes = []
+        train_images_attributes.append(attributes_title)
+        for i in range (1, int(Nbr_images*self.train_size) + 1):
+            list_att=[]
+            for j in range (len(attributes[i])):
+                list_att.append(attributes[i][j])
+            train_images_attributes.append(list_att)
+        np.save(train_path+'\\train_images_att.npy',np.array(train_images_attributes))
+        info("Copying train images attributes OK")
+        
+
+        info("start copying test images attributes in ...//data//test")
+        print("start copying test images attributes in ...//data//test")
+        test_images_attributes = []
+        test_images_attributes.append(attributes_title)
+        for i in range (int(Nbr_images*self.train_size) + 1, int(Nbr_images*self.train_size) + int(Nbr_images*self.test_size) + 1):
+            list_att=[]
+            for j in range (len(attributes[i])):
+                list_att.append(attributes[i][j])
+            test_images_attributes.append(list_att)
+        np.save(test_path+'\\test_images_att.npy',np.array(test_images_attributes))
+        info("Copying test images attributes OK")
+
+        info("start copying validation images attributes in ...//data//validation")
+        print("start copying validation images attributes in ...//data//validation")
+        validation_images_attributes = []
+        validation_images_attributes.append(attributes_title)
+        for i in range (int(Nbr_images*self.train_size) + int(Nbr_images*self.test_size) + 1, Nbr_images + 1):
+            list_att=[]
+            for j in range (len(attributes[i])):
+                list_att.append(attributes[i][j])
+            validation_images_attributes.append(list_att)
+        np.save(validation_path+'\\validation_images_att.npy',np.array(validation_images_attributes))
+        info("Copying validation images attributes OK")
+        
         #nbr, nbr_att = len(images), len(attributes)
  
         # train_attributes = attributes[:int(self.train_size * nbr_att)]
