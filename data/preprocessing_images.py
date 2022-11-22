@@ -5,7 +5,6 @@ import pathlib
 import os
 import sys
 from csv import writer
-import tensorflow as tf
 PARENT_PATH = str(pathlib.Path().parent.resolve())
 sys.path.append(PARENT_PATH + "\\cfg")
 from config import info, debug, warning, log_config
@@ -31,8 +30,13 @@ def preprocessing_images ():
         return
     else: 
         info("OK : All images are downloded")
-
-
+    
+    #verifying if the folder of the images resized exists.
+    if  "img_align_celeba_resize" not in os.listdir(PATH):
+        os.mkdir(PATH + "\\img_align_celeba_resize")
+        info("img_align_celeba_resize folder is created")
+        print("img_align_celeba_resize folder is created")
+    
     if len(os.listdir(PATH + "\\img_align_celeba_resize")) == 0:
         info("OK : ../../img_align_celba_resize is empty, we will start resizing images ")
         print("OK : ../../img_align_celba_resize is empty, we will start resizing images ")
@@ -68,6 +72,7 @@ def preprocessing_images ():
         assert I_resize.shape == (SIZE_IMG, SIZE_IMG, 3)
         cv2.imwrite(PATH + "\\img_align_celeba_resize\\%06i.jpg" % i, I_resize)
     info("Save resized images OK")
+    print("Save resized images OK")
     tps2 = perf_counter()
     print(tps2 - tps1, (tps2 - tps1)/60)
 
@@ -78,7 +83,7 @@ def preprocessing_labels():
     attr_lines = [line.rstrip() for line in open(dataset_table, 'r')]
     attr_keys = 'file_name' + ' '+ attr_lines[1]
     matdata = []
-    for i in range(1,Nbr_images+1):
+    for i in range(1,Nbr_images+2):
         # Add the header
         if i == 1:
             list_data = np.array(attr_keys.replace('  ',' ').replace(',','').split()).reshape(1,-1)[0]
@@ -102,9 +107,9 @@ def preprocessing_labels():
 
     # to save as npy
     matdata = np.array(matdata)
-    if matdata.shape != (Nbr_images,41):
-        debug(f"Found {matdata.shape}, must have {(Nbr_images,41)} ")
-        raise Exception (f"Found {matdata.shape}, must have {(Nbr_images,41)} ")
+    if matdata.shape != (Nbr_images+1,41):
+        debug(f"Found {matdata.shape}, must have {(Nbr_images+1,41)} ")
+        raise Exception (f"Found {matdata.shape}, must have {(Nbr_images+1,41)} ")
         
     np.save(f'{os.getcwd()}/data/ATTRIBUTS.npy',np.array(matdata))
     info("ATTRIBUTS.npy saved correctly")
@@ -112,5 +117,5 @@ def preprocessing_labels():
 
 
 if __name__ == '__main__':
-    preprocessing_images()
-    # preprocessing_labels()
+    # preprocessing_images()
+    preprocessing_labels()
