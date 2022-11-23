@@ -47,19 +47,19 @@ class LoadData :
         if not os.path.exists(validation_path):
             os.makedirs(validation_path)   
         
-        ############# Cpying train images in the folder ...//data//train
-        # info("start copying train images in ...//data//train")
-        # print("start copying train images in ...//data//train")
-        # for i in range (1, int(Nbr_images*self.train_size) + 1):
-        #     cv2.imwrite(train_path + "\\%06i.jpg" % i, cv2.imread(PATH + "\\data\\img_align_celeba_resize\\%06i.jpg" % i))
-        # info("Copying train images OK")
+        ############ Cpying train images in the folder ...//data//train
+        info("start copying train images in ...//data//train")
+        print("start copying train images in ...//data//train")
+        for i in range (1, int(Nbr_images*self.train_size) + 1):
+            cv2.imwrite(train_path + "\\%06i.jpg" % i, cv2.imread(PATH + "\\data\\img_align_celeba_resize\\%06i.jpg" % i))
+        info("Copying train images OK")
         
-        # ############## Copying test images into ..//data//test
-        # info("start copying test images in ...//data//test")
-        # print("start copying test images in ...//data//test")
-        # for i in range (int(Nbr_images*self.train_size) + 1, int(Nbr_images*self.train_size) + int(Nbr_images*self.test_size) + 1):
-        #     cv2.imwrite(test_path + "\\%06i.jpg" % i, (cv2.imread(PATH + "\\data\\img_align_celeba_resize\\%06i.jpg" % i)))
-        # info("Copying test images OK")
+        ############## Copying test images into ..//data//test
+        info("start copying test images in ...//data//test")
+        print("start copying test images in ...//data//test")
+        for i in range (int(Nbr_images*self.train_size) + 1, int(Nbr_images*self.train_size) + int(Nbr_images*self.test_size) + 1):
+            cv2.imwrite(test_path + "\\%06i.jpg" % i, (cv2.imread(PATH + "\\data\\img_align_celeba_resize\\%06i.jpg" % i)))
+        info("Copying test images OK")
 
         ############## Copying validation images in the folder ..//data//validation
         info("start copying validation images in ...//data//validation")
