@@ -20,7 +20,7 @@ PATH = PARENT_PATH + "\\data"
 Nbr_images = 202599
 SIZE_IMG = 256
 
-
+print(PARENT_PATH)
 def preprocessing_images ():
     log_config("preprocessing_images")
     #verifying if all images are in data
@@ -116,6 +116,6 @@ def preprocessing_labels():
 
 
 
-if __name__ == '__main__':
+# if __name__ == '__main__':
     # preprocessing_images()
-    preprocessing_labels()
+    # preprocessing_labels()
