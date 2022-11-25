@@ -1,22 +1,20 @@
 import numpy as np
 import tensorflow as tf
 
-from keras.layers import Input, Dense, Reshape, Flatten, Dropout
-from keras.layers import BatchNormalization, Activation
-from keras.layers import LeakyReLU
-from keras.layers import Conv2D, Conv2DTranspose
-from keras.models import Sequential, Model
-from keras.optimizers import Adam
+from tensorflow.keras.layers import Input, Dense, Reshape, Flatten, Dropout
+from tensorflow.keras.layers import BatchNormalization, Activation
+from tensorflow.keras.layers import LeakyReLU
+from tensorflow.keras.layers import Conv2D, Conv2DTranspose
+from tensorflow.keras.models import Sequential, Model
+from tensorflow.keras.optimizers import Adam
 
-from keras.layers import RandomFlip
 
-from ..cfg.config import debug, info, warning, log_config
+#from ..cfg.config import debug, info, warning, log_config
 
-import random
 
 IMG_SIZE = 256
 
-def encoder(hid_dim = 512, init_fm = 16, max_filter = 512):
+def encoder(hid_dim = 512, init_fm = 16, max_filter = 512) -> tf.keras.Model:
 
     nb_layers = int(np.log2(hid_dim/init_fm))
 
@@ -27,7 +25,7 @@ def encoder(hid_dim = 512, init_fm = 16, max_filter = 512):
     # conv layers constructions
     #initialiser
     inputs    = Input(shape=(IMG_SIZE, IMG_SIZE, 3))
-    x=Conv2D(i, (4,4),strides=(2,2),padding=(1,1))(inputs)
+    x=Conv2D(inputs, (4,4),strides=(2,2),padding=(1,1))(inputs)
     x=BatchNormalization()(x)
     x=LeakyReLU(alpha=0.2)(x)
 
@@ -41,11 +39,36 @@ def encoder(hid_dim = 512, init_fm = 16, max_filter = 512):
     x=BatchNormalization()(x)
     x = LeakyReLU(alpha=0.2)(x)
     encoder = Model(inputs, x , name = 'encoder')
-    return x
+    return encoder
 
 
-"""
-# revoir
+
+def discriminator(n_attr = 1) -> tf.keras.Model:
+
+    shape = (2,2,512)
+    discriminator = Sequential()
+    discriminator.add(Conv2DTranspose(512,(4,4),strides=(2,2),padding=(1,1), input_shape = shape))
+    discriminator.add(BatchNormalization())
+    discriminator.add(Activation('relu'))
+
+    #il n'y pas de dropout dans le discriminateur pour le model original
+    #d'après l'article, il permet d'augmenter de façon significatif les performances
+    discriminator.add(Dropout(rate=0.3))
+
+    discriminator.add(Dense(512, input_shape=(512,), activation=None))
+    discriminator.add(LeakyReLU(alpha = 0.2))
+    discriminator.add(Dense(n_attr, input_shape=(512,), activation=None))
+
+    discriminator.add(Activation('sigmoid'))
+
+    return discriminator
+
+
+
+
+
+
+# #################  revoir  ##################
 def input_decode(y,z):
     y=tf.keras.utils.to_categorical(y, num_classes=2)
     y=tf.transpose(tf.stack([y]*4),[1, 0, 2])
@@ -55,9 +78,10 @@ def input_decode(y,z):
     y=tf.reshape(y, [-1, xx, yy, 2*40])
     
     z=tf.concat([z,y],3)
+################################################
 
 
-def decoder(nbr_attr, max_filter = 512):
+def decoder(nbr_attr = 1, max_filter = 512) -> tf.keras.Model:
     latent_dim = (2,2,max_filter + 2*nbr_attr)
     inputs  = Input(shape=(latent_dim,))
 
@@ -69,7 +93,7 @@ def decoder(nbr_attr, max_filter = 512):
     
     for n in nb_filter:
         y= tf.concat([y]*4,axis=1)
-        y=Reshape(y, [-1, xx, yy, 2*40])
+        y=Reshape(y, [-1, xx, yy, 2*nbr_attr])
         
         z=tf.concat([z,y],3)
         z=Conv2DTranspose(n, (4,4),strides=(2,2),padding=(1,1))(z)
@@ -80,17 +104,39 @@ def decoder(nbr_attr, max_filter = 512):
         xx=xx*2
         yy=yy*2
 
-    x2=Conv2DTranspose(3, (4,4),strides=(2,2),padding=(1,1))(z)
+    outputs=Conv2DTranspose(3, (4,4),strides=(2,2),padding=(1,1))(z)
 
     #vérifier que x2 est de dimension (256, 256)
     
     #valeur de l'image entre -1 et 1
-    x2=tf.math.tanh(x2)
+    outputs=tf.math.tanh(outputs)
+    decode = Model(inputs, outputs)
+    return decode
+
+
+
+
+
+"""
+#cette fonction permet de recupérer le y à partir de z
+def discriminateur(z):
     
-    return x2
-
-
-    """
+    z=Conv2DTranspose(512, (4,4),strides=(2,2),padding=(1,1))(z)
+    z=BatchNormalization()(z)
+    z=Activation('relu')(z)
+    
+    #il n'y pas de dropout dans le discriminateur pour le model original
+    #d'après l'article, il permet d'augmenter de façon significatif les performances
+    z = Dropout(rate=0.3)(z)
+        
+    z=Dense(512, input_shape=(512,), activation=None)(z)
+    z=LeakyReLU(alpha=0.2)
+    z=Dense(40, input_shape=(512,), activation=None)(z)
+    
+    #valeur de y entre 0 et 1
+    prediction_y=tf.math.sigmoid(z)
+    
+    return prediction_y
 
 lambda_e=0
 optimizer = Adam(0.002, 0.5)
@@ -140,25 +186,7 @@ def decoder(z,y):
     
     return x2
     
-#cette fonction permet de recupérer le y à partir de z
-def discriminateur(z):
-    
-    z=Conv2DTranspose(512, (4,4),strides=(2,2),padding=(1,1))(z)
-    z=BatchNormalization()(z)
-    z=Activation('relu')(z)
-    
-    #il n'y pas de dropout dans le discriminateur pour le model original
-    #d'après l'article, il permet d'augmenter de façon significatif les performances
-    z = Dropout(rate=0.3)(z)
-        
-    z=Dense(512, input_shape=(512,), activation=None)(z)
-    z=LeakyReLU(alpha=0.2)
-    z=Dense(40, input_shape=(512,), activation=None)(z)
-    
-    #valeur de y entre 0 et 1
-    prediction_y=tf.math.sigmoid(z)
-    
-    return prediction_y
+
     
 def loss_ae(x,x2):
     l=tf.squared_difference(x, x2)
@@ -202,7 +230,7 @@ def loss(x,x2,y,prediction_y):
 #     return model_gan
 
 
-
+"""
 
 # if __name__ == '__main__':
 #     gan = GAN([6],[1])

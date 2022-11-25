@@ -5,15 +5,15 @@ import os
 import sys
 import pathlib
 from fader_networks import GAN
-from model import encoder, decoder, discriminateur
+from model import encoder, decoder, discriminator
 sys.path.append(str(pathlib.Path().parent.resolve()) + "\\cfg")
 from config import debug, info, warning, log_config, PATH, epochs, batch_size
 import glob
 Nbr_images = 202599
 log_config('train')
 image_path = glob.glob(PATH + '\\data\\train' + '\\*.jpg')
-print(np.array(image_path)[0])
-from model import GAN
+
+from fader_networks import GAN
 
 
 class Train:

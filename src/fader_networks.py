@@ -8,11 +8,11 @@ Created on Mon Oct 31 09:35:49 2022
 import numpy as np
 import tensorflow as tf
 
-from keras.layers import Input, Dense, Reshape, Flatten, Dropout
-from keras.layers import BatchNormalization, Activation
-from keras.layers import LeakyReLU
-from keras.layers import Conv2D, Conv2DTranspose
-from keras.models import Sequential, Model
+from tensorflow.keras.layers import Input, Dense, Reshape, Flatten, Dropout
+from tensorflow.keras.layers import BatchNormalization, Activation
+from tensorflow.keras.layers import LeakyReLU
+from tensorflow.keras.layers import Conv2D, Conv2DTranspose
+from tensorflow.keras.models import Sequential, Model
 from model import encoder, decoder, discriminator, input_decode
 
 class AutoEncoder(Model):
