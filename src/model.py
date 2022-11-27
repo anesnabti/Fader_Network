@@ -6,7 +6,7 @@ from keras.layers import Input, Dense, Reshape, Flatten, Dropout
 from keras.layers import BatchNormalization, Activation
 from keras.layers import LeakyReLU, ReLU
 from keras.layers import Conv2D, Conv2DTranspose
-from keras.models import Sequential, Model
+from keras.models import Sequential, Model, load_model
 from keras.optimizers import Adam
 
 
@@ -20,7 +20,7 @@ class Encoder(Model):
         super(Encoder, self).__init__()
         self.nb_layers = int(np.log2(hid_dim/init_fm))
         layer_filter = [init_fm]
-        for i in range (self.nb_layers):
+        for i in range (self.nb_layers+1):
             layer_filter.append(2*layer_filter[-1])
 
         self.input_layer =  Conv2D(init_fm, (4,4),strides=(2,2),padding='same', input_shape = (IMG_SIZE, IMG_SIZE, 3))
@@ -30,18 +30,22 @@ class Encoder(Model):
             self.hid_layer.append(Conv2D(i, (4,4),strides=(2,2),padding='same'))
 
         self.output_layer = Conv2D(max_filter, (4,4),strides=(1,1),padding='same')
+
+    
     def call(self, inputs, training=None, **kwargs):
-        print(self.nb_layers)
         x = self.input_layer(inputs)
-        x=BatchNormalization()(x)
+        #x=BatchNormalization()(x)
+        #BatchNormalization()
         x=LeakyReLU(alpha=0.2)(x)
-        for i in range(self.nb_layers):
+        for i in range(self.nb_layers+1):
             x = self.hid_layer[i](x)
-            x=BatchNormalization()(x)
+            #x=BatchNormalization()(x)
+            #BatchNormalization()
             x=LeakyReLU(alpha=0.2)(x)
 
         x = self.output_layer(x)
-        x=BatchNormalization()(x)
+        #x=BatchNormalization()(x)
+        #BatchNormalization()
         x=LeakyReLU(alpha=0.2)(x)
         return x
 
@@ -50,8 +54,8 @@ class Encoder(Model):
 class Discriminator(Model):
     def __init__(self,n_attr = 1 ):
         super(Discriminator, self).__init__()
-        self.input_shape = (2,2,512)
-        self.layer1 = Conv2DTranspose(512,(4,4),strides=(2,2),padding='same', input_shape = self.input_shape)
+        self.inputs_shape = (2,2,512)
+        self.layer1 = Conv2DTranspose(512,(4,4),strides=(2,2),padding='same', input_shape = self.inputs_shape)
         self.layer2 = Dense(512, input_shape=(512,), activation=None)
         self.layer3 = Dense(n_attr, input_shape=(512,), activation=None)
         
@@ -69,40 +73,45 @@ class Discriminator(Model):
 
 
 class Decoder(Model):
-    def __init__(self,nbr_attr = 1, img_fm = 3, max_filter = 512,init_fm = 16 ):
+    def __init__(self,nbr_attr = 1, img_fm = 3, max_filter = 512,init_fm = 16, disc = False ):
         super(Decoder, self).__init__()
 
-        n_dec_out = img_fm
         self.nb_layers = int(np.log2(max_filter/init_fm))
-        self.latent_dim = (2,2,max_filter + 2*nbr_attr)
+        if disc:
+            self.latent_dim = (2,2,max_filter + 2*nbr_attr)
+        else:
+            self.latent_dim = (2,2,max_filter)
+            
         n_dec_in = init_fm + nbr_attr
         
         filter_layer = [max_filter]
-        for i in range (self.nb_layers):
+        for i in range (self.nb_layers+1):
             filter_layer.append(filter_layer[-1]/2)
 
         self.input_layer = Conv2DTranspose(512, (4,4),strides=(1,1),padding='same', input_shape = self.latent_dim)
         self.hid_layer = []
         for i in filter_layer[1:]:
-            self.hid_dim.append(Conv2DTranspose(i, (4,4),strides=(2,2),padding='same'))
+            self.hid_layer.append(Conv2DTranspose(i, (4,4),strides=(2,2),padding='same'))
         self.output_layer = Conv2DTranspose(img_fm, (4,4),strides=(2,2),padding='same')
 
-        def call(self, inputs, training=None, **kwargs):
+    def call(self, inputs, training=None, **kwargs):
 
-            x = self.input_layer(inputs)
-            x=BatchNormalization()(x)
+        x = self.input_layer(inputs)
+        #x=BatchNormalization()(x)
+        #BatchNormalization()
+        x=ReLU()(x)
+        for i in range(self.nb_layers+1):
+            x = self.hid_layer[i](x)
+            #x=BatchNormalization()(x)
+            #BatchNormalization()
             x=ReLU()(x)
-            for i in range(self.nb_layer):
-                x = self.hid_layer(x)
-                x=BatchNormalization()(x)
-                x=ReLU()(x)
-                x=Dropout(0.3)(x)
-            x = self.output_layer(x)
-            #vérifier que x2 est de dimension (256, 256)
+            x=Dropout(0.3)(x)
+        x = self.output_layer(x)
+        #vérifier que x2 est de dimension (256, 256)
 
-            #valeur de l'image entre -1 et 1
-            x = tf.math.tanh(x)        # a verifier 
-            return x
+        #valeur de l'image entre -1 et 1
+        x = tf.math.tanh(x)        # a verifier 
+        return x
 
 # #################  revoir  ##################
 def input_decode(y,z):
@@ -118,12 +127,12 @@ def input_decode(y,z):
 
 # Simple Autoencoder
 class AutoEncoder(Model):
-    def __init__ (self, encoder, decoder):
+    def __init__ (self, encoder, decoder, iSdis = True):
         super(AutoEncoder, self).__init__()
-        self.encoder = Encoder()
-        self.decoder = Decoder()
+        self.encoder = encoder
+        self.decoder = decoder
     
-    def call(self, inputs):
+    def call(self, input):
         '''
         Model forward pass, when we use our model
         args:
@@ -131,10 +140,11 @@ class AutoEncoder(Model):
         return:
             x_reconstruct : Output of the model 
         '''
-        z = self.encoder(inputs)
+        z = self.encoder(input)
         x_reconstruct = self.decoder(z)
         return x_reconstruct
 
+    
     def train_step(self, input):
         '''
         Implementation of the training update.
@@ -172,7 +182,6 @@ class AutoEncoder(Model):
         
         return {
             "r_loss":   reconstruction_loss,
-      
         }
 
 
@@ -182,18 +191,33 @@ class AutoEncoder(Model):
         self.encoder.save(f'{filename}-encoder.h5')
         self.decoder.save(f'{filename}-decoder.h5')
 
-
+    def reload(self,filename):
+        '''Reload the two parts of AutoEncoder'''
+        filename, extension = os.path.splitext(filename)
+        self.encoder = load_model(f'{filename}-encoder.h5')
+        self.decoder = load_model(f'{filename}-decoder.h5')
+        print('Reloaded.')
 
 
 if __name__ == '__main__':
 
     tmp = np.load('D:\M2\ML\Projet\Fader_N\Fader_Network\src\Fader_Network.npy')
     enc = Encoder()
-    data  = tmp[0:10]
-    # le rajout d'un reshape (-1, 256,256,3) n'est obligatoire que lorsqu'on donne une suele image à model
+    dec = Decoder()
+    ae = AutoEncoder(enc, dec)
+    ae.compile(optimizer=Adam())
+    data  = tmp
+    # # le rajout d'un reshape (-1, 256,256,3) n'est obligatoire que lorsqu'on donne une suele image à model
     data = data.reshape(-1, 256,256,3)
-    print(data.shape)
-    #enc.compile()
-    print(enc(data))
-    print(enc.get_weights())
-    
+    #print(enc(tmp[0:3]).shape)
+    # print(data.shape)
+    # enc.compile()
+    # print(enc(data))
+    # print(enc.get_weights())
+    # dis = Discriminator()
+    # print(dis(np.ones((2,2,2,512))))
+    # print(dis.get_weights())
+    #print(dec(np.ones((2,2,2,512))))
+    #history = ae.fit(data, epochs=1, batch_size=16)
+
+
