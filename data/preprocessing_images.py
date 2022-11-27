@@ -5,9 +5,9 @@ import pathlib
 import os
 import sys
 from csv import writer
-PARENT_PATH = str(pathlib.Path().parent.resolve())
-sys.path.append(PARENT_PATH + "\\cfg")
-from config import info, debug, warning, log_config
+PARENT_PATH = os.path.dirname(os.path.abspath(__file__))[:-4]
+sys.path.append(PARENT_PATH + "cfg")
+from config import info, debug, log_config
 import shutil
 from time import perf_counter
 
@@ -16,11 +16,10 @@ This file aims to us to preprocess all images in our data.
 The purpose is to crop images and resize them to (256 x 256)
 """
 
-PATH = PARENT_PATH + "\\data"
+PATH = os.path.dirname(os.path.abspath(__file__))
 Nbr_images = 202599
 SIZE_IMG = 256
 
-print(PARENT_PATH)
 def preprocessing_images ():
     log_config("preprocessing_images")
     #verifying if all images are in data
