@@ -4,7 +4,7 @@ import cv2
 import os 
 import sys
 import pathlib
-sys.path.append(str(pathlib.Path().parent.resolve()) + "\\cfg")
+sys.path.append(str(os.path.dirname(os.path.abspath(__file__)))[:-3] + "\\cfg")
 from config import debug, info, warning, log_config, PATH
 Nbr_images = 202599
 
@@ -13,7 +13,7 @@ This file will load the pre-processed data.
 Split them on train, validation and test.
 Normalize images
 """
-attributes = np.load(str(pathlib.Path().parent.resolve()) + "\\data\\ATTRIBUTS.npy")
+attributes = np.load(str( os.path.dirname(os.path.abspath(__file__)))[:-3] + "\\data\\ATTRIBUTS.npy")
 log_config("load_data")
 
 
@@ -120,6 +120,6 @@ class LoadData :
         
         
 
-if __name__ == '__main__':
-    ld = LoadData(0.7, 0.15, 0.15)
-    ld.split_data()
+# if __name__ == '__main__':
+#     ld = LoadData(0.7, 0.15, 0.15)
+#     ld.split_data()
