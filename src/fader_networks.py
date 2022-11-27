@@ -8,11 +8,11 @@ Created on Mon Oct 31 09:35:49 2022
 import numpy as np
 import tensorflow as tf
 
-from tensorflow.keras.layers import Input, Dense, Reshape, Flatten, Dropout
-from tensorflow.keras.layers import BatchNormalization, Activation
-from tensorflow.keras.layers import LeakyReLU
-from tensorflow.keras.layers import Conv2D, Conv2DTranspose
-from tensorflow.keras.models import Sequential, Model
+from keras.layers import Input, Dense, Reshape, Flatten, Dropout
+from keras.layers import BatchNormalization, Activation
+from keras.layers import LeakyReLU
+from keras.layers import Conv2D, Conv2DTranspose
+from keras.models import Sequential, Model
 from model import encoder, decoder, discriminator, input_decode
 
 class AutoEncoder(Model):
@@ -58,20 +58,20 @@ class GAN(Model):
         """
         z = self.encoder(img)
         y_predict = self.discriminator(z)
-        z = input_decode(att, z)
-        x_reconstruct = self.decoder(z)
+        z_ = input_decode(att, z)
+        x_reconstruct = self.decoder(z_)
 
 
         return z, y_predict, x_reconstruct
 
     def get_loss(self):
-        loss_ae = tf.keras.losses.mse()
-        loss_discrimintor = tf.keras.mse()
+        loss_ae = tf.keras.losses.MeanSquaredError()
+        loss_discrimintor = tf.keras.losses.MeanSquaredError()
 
         return loss_ae, loss_discrimintor
 
     
-    @tf.function
+    # @tf.function
     def train_step(self, img, att, lamda_e):
         """
         Train the model for one step
