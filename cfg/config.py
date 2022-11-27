@@ -1,11 +1,12 @@
 import logging
 import pathlib
 from datetime import datetime as date
+import os
 
 ################## Logging #################
-PARENT_PATH = str(pathlib.Path().parent.resolve())
-PATH = PARENT_PATH
-logging_path = PARENT_PATH + "\\log"
+PARENT_PATH = os.path.dirname(os.path.abspath(__file__))
+PATH = PARENT_PATH[:-3]
+logging_path = PARENT_PATH[:-3] + "log"
 logger = logging.getLogger()
 info = logger.info
 debug = logger.debug
