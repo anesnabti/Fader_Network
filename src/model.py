@@ -2,6 +2,7 @@
 import numpy as np
 import tensorflow as tf
 import os
+import cv2
 from keras.layers import Input, Dense, Reshape, Flatten, Dropout
 from keras.layers import BatchNormalization, Activation
 from keras.layers import LeakyReLU, ReLU
@@ -57,16 +58,17 @@ class Discriminator(Model):
         self.inputs_shape = (2,2,512)
         self.layer1 = Conv2DTranspose(512,(4,4),strides=(2,2),padding='same', input_shape = self.inputs_shape)
         self.layer2 = Dense(512, input_shape=(512,), activation=None)
-        self.layer3 = Dense(n_attr, input_shape=(512,), activation=None)
+        self.layer3 = Dense(n_attr,input_shape=(512,), activation=None)
         
     def call(self, inputs, training=None, **kwargs):
         x = self.layer1(inputs)
         x = BatchNormalization()(x)
         x = ReLU()(x)
         x = Dropout(0.3)(x)
+        x = Flatten()(x)
         x = self.layer2(x)
         x = LeakyReLU(alpha = 0.2)(x)
-        x = self.layer2(x)
+        x = self.layer3(x)
         x = Activation('sigmoid')(x)
         return x
 
@@ -114,16 +116,35 @@ class Decoder(Model):
         return x
 
 # #################  revoir  ##################
-def input_decode(y,z):
-    y=tf.keras.utils.to_categorical(y, num_classes=2)
-    y=tf.transpose(tf.stack([y]*4),[1, 0, 2])
+# def input_decode(z,y):
+#     y=tf.keras.utils.to_categorical(y, num_classes=2)
+#     y=tf.transpose(tf.stack([y]*4),[1, 0, 2])
 
-    xx=2
-    yy=2
-    y=tf.reshape(y, [-1, xx, yy, 2*40])
+#     xx=2
+#     yy=2
+#     y=tf.reshape(y, [-1, xx, yy, 2*40])
     
-    z=tf.concat([z,y],3)
+#     z=tf.concat([z,y],3)
+#     return z
 ################################################
+def input_decode(z, y):
+    print(z.shape)
+    z = tf.cast(z, tf.float32)
+    y = tf.cast(y, tf.float32)
+    n_attr = 1
+    
+    y = tf.expand_dims(y, axis = -1)
+    y = tf.expand_dims(y, axis = -1)
+    #y = tf.expand_dims(y, axis = -1)
+    y = tf.repeat(y, 2, axis = -1)
+    y = tf.repeat(y, 2, axis = -2)
+    print(y.shape)
+    z = tf.reshape(z,(-1,512,2,2))
+    zy = tf.concat((z,y), axis = 1)
+    zy = tf.reshape(zy,(-1,2,2,512+n_attr))
+
+    return zy
+
 
 # Simple Autoencoder
 class AutoEncoder(Model):
@@ -132,7 +153,7 @@ class AutoEncoder(Model):
         self.encoder = encoder
         self.decoder = decoder
     
-    def call(self, input):
+    def call(self, input, att = None):
         '''
         Model forward pass, when we use our model
         args:
@@ -141,8 +162,12 @@ class AutoEncoder(Model):
             x_reconstruct : Output of the model 
         '''
         z = self.encoder(input)
-        x_reconstruct = self.decoder(z)
-        return x_reconstruct
+        if att == None:
+            return z
+        else:
+            dec_input = input_decode(z,att)
+            x_reconstruct = self.decoder(dec_input)
+            return x_reconstruct,z
 
     
     def train_step(self, input):
@@ -199,16 +224,22 @@ class AutoEncoder(Model):
         print('Reloaded.')
 
 
-if __name__ == '__main__':
+#if __name__ == '__main__':
 
-    tmp = np.load('D:\M2\ML\Projet\Fader_N\Fader_Network\src\Fader_Network.npy')
-    enc = Encoder()
-    dec = Decoder()
-    ae = AutoEncoder(enc, dec)
-    ae.compile(optimizer=Adam())
-    data  = tmp
-    # # le rajout d'un reshape (-1, 256,256,3) n'est obligatoire que lorsqu'on donne une suele image à model
-    data = data.reshape(-1, 256,256,3)
+    # tmp = np.load('D:\M2\ML\Projet\Fader_N\Fader_Network\src\Fader_Network.npy')
+    # enc = Encoder()
+    # dec = Decoder()
+    # dec.compile(optimizer=Adam())
+    # ae = AutoEncoder(enc, dec)
+    # ae.compile(optimizer=Adam())
+    # #data  = tmp
+    # # # le rajout d'un reshape (-1, 256,256,3) n'est obligatoire que lorsqu'on donne une suele image à model
+    # #data = data.reshape(-1, 256,256,3)
+    # i = cv2.imread('D:/M2/ML/Projet/Fader_N/Fader_Network/data/train/000001.jpg')
+    # print(i)
+    # # cv2.imshow('test',i)
+    # # cv2.waitKey(0)
+    # print(i / 127.5 - 1)
     #print(enc(tmp[0:3]).shape)
     # print(data.shape)
     # enc.compile()
@@ -219,5 +250,3 @@ if __name__ == '__main__':
     # print(dis.get_weights())
     #print(dec(np.ones((2,2,2,512))))
     #history = ae.fit(data, epochs=1, batch_size=16)
-
-

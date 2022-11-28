@@ -4,8 +4,9 @@ import cv2
 import os 
 import sys
 import pathlib
+from load_data import Loader
 from fader_networks import GAN
-from model import encoder, decoder, discriminator
+from model import Encoder, Decoder, Discriminator
 sys.path.append( os.path.dirname(os.path.abspath(__file__))[:-3] + "\\cfg")
 from config import debug, info, warning, log_config, PATH
 import glob
@@ -21,45 +22,31 @@ class Train:
         self.image_path = glob.glob(PATH + '\\data\\train' + '\\*.jpg')
         # self.gan = GAN(num_attr, valeur)
         self.lr = lr
-        self.attr = np.load(PATH + "\\data\\train\\train_images_att.npy")
-        self.gan = GAN(encoder=encoder, decoder=decoder, discriminator=discriminator)
+        self.gan = GAN(encoder=Encoder(), decoder=Decoder(disc = True), discriminator=Discriminator())
 
         
-    
-    def normalize (self, image):  
-        return image/127.5-1.0             # return image normalized between -1 and 1 
-
-
-    def image_batch(self, bacth_size, itr):
-        """ provide batch images to train """ 
-        tmp = []
-        for i in range (bacth_size):
-            tmp.append(self.normalize(cv2.imread(np.array(self.image_path)[i + itr * bacth_size])))
-        info("Batch size image OK")
-        return tmp
-
 
     def training(self, epochs, batch_size):
-
-        nbr_itr_per_epoch = int(len(np.array(self.image_path))/batch_size)
+        ld = Loader()
+        nbr_itr_per_epoch = int(len(self.image_path)/batch_size)
         info('start training') 
         for epoch in range (epochs):
          
             for i in range (nbr_itr_per_epoch):
                 lambda_e = 0.0001 * (epoch*nbr_itr_per_epoch + i)/(nbr_itr_per_epoch*epochs)
 
-                imgs = self.image_batch(batch_size, i)
-                atts = self.attr[i*batch_size : (i+1)*batch_size]
-                for img, att in zip(np.array(imgs), atts):
-                    loss_model = self.gan.train_step(img, att, lambda_e)
+                imgs, atts = ld.Load_Data(batch_size,i)
+                #for img, att in zip(np.array(imgs), atts):
+                loss_model = self.gan.train_step(imgs, atts, lambda_e)
 
             print(f'epoch : {epoch}  --------   loss = {loss_model}')
 
         info(f"epoch: {epoch} finished OK")
 
 # if __name__ == '__main__':
-#     training = Train(0.01)  
-#     training.training(epochs=epochs, batch_size=batch_size)  
+    # training = Train(0.01)
+
+    # training.training(epochs=1, batch_size=32)  
 
 
 

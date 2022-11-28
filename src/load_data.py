@@ -3,7 +3,8 @@ import numpy as np
 import cv2
 import os 
 import sys
-import pathlib
+from model import input_decode
+import glob
 sys.path.append(str(os.path.dirname(os.path.abspath(__file__)))[:-3] + "\\cfg")
 from config import debug, info, warning, log_config, PATH
 Nbr_images = 202599
@@ -13,7 +14,7 @@ This file will load the pre-processed data.
 Split them on train, validation and test.
 Normalize images
 """
-attributes = np.load(str( os.path.dirname(os.path.abspath(__file__)))[:-3] + "\\data\\ATTRIBUTS.npy")
+#attributes = np.load(str( os.path.dirname(os.path.abspath(__file__)))[:-3] + "\\data\\ATTRIBUTS.npy")
 log_config("load_data")
 
 
@@ -123,3 +124,49 @@ class LoadData :
 # if __name__ == '__main__':
 #     ld = LoadData(0.7, 0.15, 0.15)
 #     ld.split_data()
+
+
+class Loader():
+    def __init__ (self):
+# A revoir 
+        self.AVAILABLE_ATTR = [
+            "5_o_Clock_Shadow", "Arched_Eyebrows", "Attractive", "Bags_Under_Eyes", "Bald",
+            "Bangs", "Big_Lips", "Big_Nose", "Black_Hair", "Blond_Hair", "Blurry", "Brown_Hair",
+            "Bushy_Eyebrows", "Chubby", "Double_Chin", "Eyeglasses", "Goatee", "Gray_Hair",
+            "Heavy_Makeup", "High_Cheekbones", "Male", "Mouth_Slightly_Open", "Mustache",
+            "Narrow_Eyes", "No_Beard", "Oval_Face", "Pale_Skin", "Pointy_Nose",
+            "Receding_Hairline", "Rosy_Cheeks", "Sideburns", "Smiling", "Straight_Hair",
+            "Wavy_Hair", "Wearing_Earrings", "Wearing_Hat", "Wearing_Lipstick",
+            "Wearing_Necklace", "Wearing_Necktie", "Young"
+        ]
+
+    def normalize (self,image):  
+        return image/127.5-1.0 
+
+
+
+    def Load_Data(self, batch_size = 2,itr = 0, mod = 'train', attr = ['Smiling']):
+
+        image_path = glob.glob(PATH + '\\data\\' + mod + '\\*.jpg')
+        attributes_path = glob.glob(PATH + '\\data\\' + mod + '\\*.npy')
+        attributes = np.load(attributes_path[0])
+        ind = []
+        for i in attr:
+            ind.append(self.AVAILABLE_ATTR.index(i)+1)
+        tmp_img = []
+        tmp_attr = []
+        
+        for i in range (batch_size):
+            tmp_img.append(self.normalize(cv2.imread(image_path[i + itr * batch_size])))
+            tmp_attr.append(attributes[i + itr*batch_size][ind])
+        return np.array(tmp_img), np.array(tmp_attr).astype(float)
+
+
+
+# if __name__ == '__main__':
+#     ld = Loader()
+#     img, attr = ld.Load_Data()
+#     print(attr.shape)
+#     print(img.shape)
+#     print(attr[0])
+#     print(input_decode(attr))

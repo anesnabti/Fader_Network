@@ -13,8 +13,9 @@ from keras.layers import BatchNormalization, Activation
 from keras.layers import LeakyReLU
 from keras.layers import Conv2D, Conv2DTranspose
 from keras.models import Sequential, Model
-from model import encoder, decoder, discriminator, input_decode
+from model import Encoder, Decoder, Discriminator,AutoEncoder, input_decode
 
+"""
 class AutoEncoder(Model):
     def __init__ (self, encoder, decoder):
         super(AutoEncoder, self).__init__()
@@ -25,12 +26,13 @@ class AutoEncoder(Model):
         z = self.encoder(img)
         x_reconstruct = self.decoder(z)
 
+"""
 
 class GAN(Model):
     '''
     Our model, built from given encoder and decoder and discriminator
     '''
-    def __init__(self, encoder=None, decoder=None, discriminator = None, **kwargs):
+    def __init__(self, encoder=Encoder(), decoder=Decoder(), discriminator = Discriminator(), **kwargs):
         '''
         GAN instantiation with encoder, decoder and discriminator
         args :
@@ -44,8 +46,9 @@ class GAN(Model):
         self.encoder       = encoder
         self.decoder       = decoder
         self.discriminator = discriminator
-        self.optimizer = tf.keras.optimizers.Adam()
+        self.optimizer = tf.keras.optimizers.Adam(learning_rate=0.0002)
         self.ae = AutoEncoder(self.encoder, self.decoder)
+
 
     def combine_model(self,img, att):
         """ Args:
@@ -56,9 +59,10 @@ class GAN(Model):
                 y_predict: attribut predict for discriminator
                 x_reconstruct: image reconstruct for decoder
         """
+        #img = img.reshape(-1,256,256,3)
         z = self.encoder(img)
         y_predict = self.discriminator(z)
-        z_ = input_decode(att, z)
+        z_ = input_decode(z, att)
         x_reconstruct = self.decoder(z_)
 
 
@@ -71,11 +75,9 @@ class GAN(Model):
         return loss_ae, loss_discrimintor
 
     
-    # @tf.function
+    #@tf.function
     def train_step(self, img, att, lamda_e):
-        """
-        Train the model for one step
-        """
+        
         loss_ae, loss_discriminator = self.get_loss()
         self.discriminator.trainable = True
         self.ae.trainable = False
@@ -86,8 +88,9 @@ class GAN(Model):
             loss_diss = loss_discriminator(att, y_predict)
 
         gradient_diss = Tape.gradient(loss_diss, self.discriminator.trainable_weights)
-        self.optimizer.apply_gradients(zip(gradient_diss, self.discriminator.trainable_weights))
-        
+        #self.optimizer.apply_gradients(zip(gradient_diss, self.discriminator.trainable_weights))
+        self.discriminator.compile(optimizer = self.optimizer, loss = tf.keras.losses.MeanSquaredError()).optimizer.apply_gradients(zip(gradient_diss, self.discriminator.trainable_weights))
+
         self.discriminator.trainable = False
         self.ae.trainable = True
         with tf.GradientTape() as Tape:
@@ -99,7 +102,7 @@ class GAN(Model):
         self.optimizer.apply_gradients(zip(gradient_rec, self.ae.trainable_weights))
         
         return loss_model
-        
+    
 
 
 
