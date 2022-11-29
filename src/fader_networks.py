@@ -74,7 +74,18 @@ class GAN(Model):
 
         return loss_ae, loss_discrimintor
 
+
+    def compile(self):
+        self.discriminator.compile(
+            optimizer= tf.keras.optimizers.Adam(),
+            loss = self.get_loss()[0])
+        
+        self.ae.compile(
+            optimizer=tf.keras.optimizers.Adam(),
+            loss=self.get_loss()[1]
+        )
     
+
     #@tf.function
     def train_step(self, img, att, lamda_e):
         
@@ -88,8 +99,8 @@ class GAN(Model):
             loss_diss = loss_discriminator(att, y_predict)
 
         gradient_diss = Tape.gradient(loss_diss, self.discriminator.trainable_weights)
-        #self.optimizer.apply_gradients(zip(gradient_diss, self.discriminator.trainable_weights))
-        self.discriminator.compile(optimizer = self.optimizer, loss = tf.keras.losses.MeanSquaredError()).optimizer.apply_gradients(zip(gradient_diss, self.discriminator.trainable_weights))
+        # self.optimizer.apply_gradients(zip(gradient_diss, self.discriminator.trainable_weights))
+        self.discriminator.optimizer.apply_gradients(zip(gradient_diss, self.discriminator.trainable_weights))
 
         self.discriminator.trainable = False
         self.ae.trainable = True
@@ -99,9 +110,10 @@ class GAN(Model):
             loss_model = loss_reconstruct + lamda_e*loss_diss
 
         gradient_rec = Tape.gradient(loss_model, self.ae.trainable_weights)
-        self.optimizer.apply_gradients(zip(gradient_rec, self.ae.trainable_weights))
+        # self.optimizer.apply_gradients(zip(gradient_rec, self.ae.trainable_weights))
+        self.ae.optimizer.apply_gradients(zip(gradient_rec, self.ae.trainable_weights))
         
-        return loss_model
+        return loss_model, loss_diss, loss_reconstruct
     
 
 
