@@ -78,7 +78,7 @@ def preprocessing_images ():
     
 def preprocessing_labels():
     log_config("preprocessing_labels")
-    dataset_table = f'{os.getcwd()}/data/Anno/list_attr_celeba.txt'
+    dataset_table = PATH + '\\Anno\\list_attr_celeba.txt'
     attr_lines = [line.rstrip() for line in open(dataset_table, 'r')]
     attr_keys = 'file_name' + ' '+ attr_lines[1]
     matdata = []
@@ -94,14 +94,14 @@ def preprocessing_labels():
         info("Attributs values added correctly")
 
         # to save as csv
-        with open('./data/list_attr_celebatest.csv', 'a', newline='') as f_object:  
-            # Pass the CSV  file object to the writer() function
-            writer_object = writer(f_object)
-            # Result - a writer object
-            # Pass the data in the list as an argument into the writerow() function
-            writer_object.writerow(list_data)  
-            # Close the file object
-            f_object.close()
+        # with open('./data/list_attr_celebatest.csv', 'a', newline='') as f_object:  
+        #     # Pass the CSV  file object to the writer() function
+        #     writer_object = writer(f_object)
+        #     # Result - a writer object
+        #     # Pass the data in the list as an argument into the writerow() function
+        #     writer_object.writerow(list_data)  
+        #     # Close the file object
+        #     f_object.close()
  
 
     # to save as npy
@@ -110,11 +110,11 @@ def preprocessing_labels():
         debug(f"Found {matdata.shape}, must have {(Nbr_images+1,41)} ")
         raise Exception (f"Found {matdata.shape}, must have {(Nbr_images+1,41)} ")
         
-    np.save(f'{os.getcwd()}/data/ATTRIBUTS.npy',np.array(matdata))
+    np.save(PATH + '\\ATTRIBUTS.npy',np.array(matdata))
     info("ATTRIBUTS.npy saved correctly")
 
 
 
-# if __name__ == '__main__':
-    # preprocessing_images()
-    # preprocessing_labels()
+if __name__ == '__main__':
+    preprocessing_images()
+    preprocessing_labels()
