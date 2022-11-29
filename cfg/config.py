@@ -22,6 +22,7 @@ def log_config(name) :
     )
 
 
-##################### Train ########################
-epochs = 100
-batch_size = 32
+
+def save_loss(msg):
+    with open(f'{PATH}utils\\loss\\loss_{date.today().strftime("%d-%m-%Y")}.txt', "w") as f:
+        f.write(msg + '\n')
