@@ -14,7 +14,7 @@ This file will load the pre-processed data.
 Split them on train, validation and test.
 Normalize images
 """
-#attributes = np.load(str( os.path.dirname(os.path.abspath(__file__)))[:-3] + "\\data\\ATTRIBUTS.npy")
+attributes = np.load(str( os.path.dirname(os.path.abspath(__file__)))[:-3] + "data\\ATTRIBUTS.npy")
 log_config("load_data")
 
 
@@ -78,7 +78,7 @@ class LoadData :
         info("start copying train images attributes in ...//data//train")
         print("start copying train images attributes in ...//data//train")
         train_images_attributes = []
-        train_images_attributes.append(attributes_title)
+        # train_images_attributes.append(attributes_title)
         for i in range (1, int(Nbr_images*self.train_size) + 1):
             list_att=[]
             for j in range (len(attributes[i])):
@@ -91,7 +91,7 @@ class LoadData :
         info("start copying test images attributes in ...//data//test")
         print("start copying test images attributes in ...//data//test")
         test_images_attributes = []
-        test_images_attributes.append(attributes_title)
+        # test_images_attributes.append(attributes_title)
         for i in range (int(Nbr_images*self.train_size) + 1, int(Nbr_images*self.train_size) + int(Nbr_images*self.test_size) + 1):
             list_att=[]
             for j in range (len(attributes[i])):
@@ -103,7 +103,7 @@ class LoadData :
         info("start copying validation images attributes in ...//data//validation")
         print("start copying validation images attributes in ...//data//validation")
         validation_images_attributes = []
-        validation_images_attributes.append(attributes_title)
+        # validation_images_attributes.append(attributes_title)
         for i in range (int(Nbr_images*self.train_size) + int(Nbr_images*self.test_size) + 1, Nbr_images + 1):
             list_att=[]
             for j in range (len(attributes[i])):
