@@ -145,13 +145,13 @@ class Loader():
 
 
 
-    def Load_Data(self, batch_size = 2,itr = 0, mod = 'train', attr = ['Smiling']):
+    def Load_Data(self, batch_size, itr, attributs, mod = 'train'):
 
         image_path = glob.glob(PATH + '\\data\\' + mod + '\\*.jpg')
         attributes_path = glob.glob(PATH + '\\data\\' + mod + '\\*.npy')
         attributes = np.load(attributes_path[0])
         ind = []
-        for i in attr:
+        for i in attributs:
             ind.append(self.AVAILABLE_ATTR.index(i)+1)
         tmp_img = []
         tmp_attr = []
