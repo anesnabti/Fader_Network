@@ -35,17 +35,17 @@ class Encoder(Model):
     
     def call(self, inputs, training=None, **kwargs):
         x = self.input_layer(inputs)
-        #x=BatchNormalization()(x)
+        x=BatchNormalization()(x)
         #BatchNormalization()
         x=LeakyReLU(alpha=0.2)(x)
         for i in range(self.nb_layers+1):
             x = self.hid_layer[i](x)
-            #x=BatchNormalization()(x)
+            x=BatchNormalization()(x)
             #BatchNormalization()
             x=LeakyReLU(alpha=0.2)(x)
 
         x = self.output_layer(x)
-        #x=BatchNormalization()(x)
+        x=BatchNormalization()(x)
         #BatchNormalization()
         x=LeakyReLU(alpha=0.2)(x)
         return x
@@ -99,12 +99,12 @@ class Decoder(Model):
     def call(self, inputs, training=None, **kwargs):
 
         x = self.input_layer(inputs)
-        #x=BatchNormalization()(x)
+        x=BatchNormalization()(x)
         #BatchNormalization()
         x=ReLU()(x)
         for i in range(self.nb_layers+1):
             x = self.hid_layer[i](x)
-            #x=BatchNormalization()(x)
+            x=BatchNormalization()(x)
             #BatchNormalization()
             x=ReLU()(x)
             x=Dropout(0.3)(x)
@@ -128,17 +128,15 @@ class Decoder(Model):
 #     return z
 ################################################
 def input_decode(z, y):
-    print(z.shape)
     z = tf.cast(z, tf.float32)
     y = tf.cast(y, tf.float32)
-    n_attr = 1
-    
+    y_ = np.reshape(y, (y.shape[0],-1))
+    n_attr = y_.shape[1]
     y = tf.expand_dims(y, axis = -1)
     y = tf.expand_dims(y, axis = -1)
     #y = tf.expand_dims(y, axis = -1)
     y = tf.repeat(y, 2, axis = -1)
     y = tf.repeat(y, 2, axis = -2)
-    print(y.shape)
     z = tf.reshape(z,(-1,512,2,2))
     zy = tf.concat((z,y), axis = 1)
     zy = tf.reshape(zy,(-1,2,2,512+n_attr))
