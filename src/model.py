@@ -21,16 +21,16 @@ class Encoder(Model):
         super(Encoder, self).__init__()
         self.nb_layers = int(np.log2(hid_dim/init_fm))
         layer_filter = [init_fm]
-        for i in range (self.nb_layers+1):
+        for i in range (self.nb_layers):
             layer_filter.append(2*layer_filter[-1])
-
+        #print(layer_filter)
         self.input_layer =  Conv2D(init_fm, (4,4),strides=(2,2),padding='same', input_shape = (IMG_SIZE, IMG_SIZE, 3))
         self.hid_layer = []
 
         for i in layer_filter[1:]:
             self.hid_layer.append(Conv2D(i, (4,4),strides=(2,2),padding='same'))
 
-        self.output_layer = Conv2D(max_filter, (4,4),strides=(1,1),padding='same')
+        self.output_layer = Conv2D(max_filter, (4,4),strides=(2,2),padding='same')
 
     
     def call(self, inputs, training=None, **kwargs):
@@ -38,7 +38,7 @@ class Encoder(Model):
         x=BatchNormalization()(x)
         #BatchNormalization()
         x=LeakyReLU(alpha=0.2)(x)
-        for i in range(self.nb_layers+1):
+        for i in range(self.nb_layers):
             x = self.hid_layer[i](x)
             x=BatchNormalization()(x)
             #BatchNormalization()
@@ -80,22 +80,22 @@ class Decoder(Model):
 
         self.nb_layers = int(np.log2(max_filter/init_fm))
         if disc:
-            self.latent_dim = (2,2,max_filter + 2*nbr_attr)
+            self.latent_dim = (2,2,max_filter + nbr_attr) 
+            #self.latent_dim = (2,2,max_filter + 2*nbr_attr)
         else:
             self.latent_dim = (2,2,max_filter)
             
-        n_dec_in = init_fm + nbr_attr
         
         filter_layer = [max_filter]
-        for i in range (self.nb_layers+1):
+        for i in range (self.nb_layers):
             filter_layer.append(filter_layer[-1]/2)
-
-        self.input_layer = Conv2DTranspose(512, (4,4),strides=(1,1),padding='same', input_shape = self.latent_dim)
+        self.input_layer = Conv2DTranspose(max_filter, (4,4),strides=(1,1),padding='same', input_shape = self.latent_dim)
         self.hid_layer = []
-        for i in filter_layer[1:]:
+        for i in filter_layer:   
             self.hid_layer.append(Conv2DTranspose(i, (4,4),strides=(2,2),padding='same'))
         self.output_layer = Conv2DTranspose(img_fm, (4,4),strides=(2,2),padding='same')
 
+ 
     def call(self, inputs, training=None, **kwargs):
 
         x = self.input_layer(inputs)
@@ -134,7 +134,6 @@ def input_decode(z, y):
     n_attr = y_.shape[1]
     y = tf.expand_dims(y, axis = -1)
     y = tf.expand_dims(y, axis = -1)
-    #y = tf.expand_dims(y, axis = -1)
     y = tf.repeat(y, 2, axis = -1)
     y = tf.repeat(y, 2, axis = -2)
     z = tf.reshape(z,(-1,512,2,2))
