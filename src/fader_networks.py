@@ -62,7 +62,8 @@ class GAN(Model):
         #img = img.reshape(-1,256,256,3)
         z = self.encoder(img)
         y_predict = self.discriminator(z)
-        z_ = input_decode(z, att)
+        attr = 1 - att
+        z_ = input_decode(z, attr)
         x_reconstruct = self.decoder(z_)
 
 
@@ -70,7 +71,7 @@ class GAN(Model):
 
     def get_loss(self):
         loss_ae = tf.keras.losses.MeanSquaredError()
-        loss_discrimintor = tf.keras.losses.MeanSquaredError()
+        loss_discrimintor = tf.keras.losses.MeanSquaredError()                      # pttr à modifier
 
         return loss_ae, loss_discrimintor
 
@@ -84,9 +85,27 @@ class GAN(Model):
             optimizer=tf.keras.optimizers.Adam(),
             loss=self.get_loss()[1]
         )
+
+    # def compile(self, weights=""):
+
+    #     if weights =="":
+    #         self.discriminator.compile(
+    #             optimizer= tf.keras.optimizers.Adam(),
+    #             loss = self.get_loss()[0])
+            
+    #         self.ae.compile(
+    #             optimizer=tf.keras.optimizers.Adam(),
+    #             loss=self.get_loss()[1]
+    #         )
+
+    #     else:
+    #         # self.discriminator.built = True
+    #         self.discriminator.load_weights(weights[0])
+    #         # self.ae.built = True
+    #         self.ae.load_weights(weights[1])
     
 
-    #@tf.function
+    # @tf.function
     def train_step(self, img, att, lamda_e):
         
         loss_ae, loss_discriminator = self.get_loss()
@@ -97,23 +116,23 @@ class GAN(Model):
             z, y_predict, x_reconstruct = self.combine_model(img, att)
             
             loss_diss = loss_discriminator(att, y_predict)
+            loss_diss2 = 1 - loss_diss
 
         gradient_diss = Tape.gradient(loss_diss, self.discriminator.trainable_weights)
-        # self.optimizer.apply_gradients(zip(gradient_diss, self.discriminator.trainable_weights))
         self.discriminator.optimizer.apply_gradients(zip(gradient_diss, self.discriminator.trainable_weights))
 
         self.discriminator.trainable = False
         self.ae.trainable = True
         with tf.GradientTape() as Tape:
             z, y_predict, x_reconstruct = self.combine_model(img, att)
+            flipt_attr = 1 - att
             loss_reconstruct = loss_ae(img, x_reconstruct)
-            loss_model = loss_reconstruct + lamda_e*loss_diss
+            loss_model = loss_reconstruct + lamda_e*loss_discriminator(flipt_attr, y_predict)
 
         gradient_rec = Tape.gradient(loss_model, self.ae.trainable_weights)
-        # self.optimizer.apply_gradients(zip(gradient_rec, self.ae.trainable_weights))
         self.ae.optimizer.apply_gradients(zip(gradient_rec, self.ae.trainable_weights))
         
-        return loss_model, loss_diss, loss_reconstruct
+        return loss_model, loss_diss, loss_reconstruct, x_reconstruct
     
 
 
