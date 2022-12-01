@@ -5,6 +5,7 @@ import os
 import sys
 from model import input_decode
 import glob
+import matplotlib.pyplot as plt
 sys.path.append(str(os.path.dirname(os.path.abspath(__file__)))[:-3] + "\\cfg")
 from config import debug, info, warning, log_config, PATH
 Nbr_images = 202599
@@ -15,7 +16,6 @@ Split them on train, validation and test.
 Normalize images
 """
 attributes = np.load(str( os.path.dirname(os.path.abspath(__file__)))[:-3] + "data\\ATTRIBUTS.npy")
-log_config("load_data")
 
 
 class LoadData : 
@@ -121,9 +121,7 @@ class LoadData :
         
         
 
-# if __name__ == '__main__':
-#     ld = LoadData(0.7, 0.15, 0.15)
-#     ld.split_data()
+
 
 
 class Loader():
@@ -141,7 +139,7 @@ class Loader():
         ]
 
     def normalize (self,image):  
-        return image/127.5-1.0 
+        return image/127.5 - 1 
 
 
 
