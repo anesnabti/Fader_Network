@@ -31,14 +31,14 @@ def preprocessing_images ():
         info("OK : All images are downloded")
     
     #verifying if the folder of the images resized exists.
-    if  "img_align_celeba_resize" not in os.listdir(PATH):
+    if  "img_align_celeba_resized" not in os.listdir(PATH):
         os.mkdir(PATH + "\\img_align_celeba_resized")
-        info("img_align_celeba_resize folder is created")
-        print("img_align_celeba_resize folder is created")
+        info("img_align_celeba_resized folder is created")
+        print("img_align_celeba_resized folder is created")
     
-    if len(os.listdir(PATH + "\\img_align_celeba_resize")) == 0:
-        info("OK : ../../img_align_celba_resize is empty, we will start resizing images ")
-        print("OK : ../../img_align_celba_resize is empty, we will start resizing images ")
+    if len(os.listdir(PATH + "\\img_align_celeba_resized")) == 0:
+        info("OK : ../../img_align_celba_resized is empty, we will start resizing images ")
+        print("OK : ../../img_align_celba_resized is empty, we will start resizing images ")
 
     elif len(os.listdir(PATH + "\\img_align_celeba_resized")) == Nbr_images  : 
         info("OK : All resized images are downloded ")
