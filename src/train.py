@@ -83,11 +83,13 @@ def plot_images(x,y=None, indices='all', columns=12, x_size=1, y_size=1,
 
 class Train:
 
-    def __init__ (self, lr):
+    def __init__ (self, lr, attributs):
  
         self.image_path = glob.glob(PATH + '\\data\\train' + '\\*.jpg')
         self.lr = lr
-        self.gan = GAN(encoder=Encoder(), decoder=Decoder(disc = True), discriminator=Discriminator())
+        self.attributs = attributs
+        self.nbr_attr = len(attributs)
+        self.gan = GAN(encoder=Encoder(), decoder=Decoder(nbr_attr = self.nbr_attr,disc = True), discriminator=Discriminator(self.nbr_attr))
 
 
     def result_train(self, real_image, reconstruct_image, epochs, nbr_itr_epoch, nbr_img=5):
@@ -107,8 +109,8 @@ class Train:
 
 
 
-    def training(self, epochs, batch_size, attributs, weights=""):
-        name_attributs = "_".join(attributs)
+    def training(self, epochs, batch_size, weights=""):
+        name_attributs = "_".join(self.attributs)
         ld = Loader()
         nbr_itr_per_epoch = 5 #int(len(self.image_path)/batch_size)
         real_image = []
@@ -126,7 +128,7 @@ class Train:
             for i in range (nbr_itr_per_epoch):
                 lambda_e = 0.0001 * (epoch*nbr_itr_per_epoch + i)/(nbr_itr_per_epoch*epochs)
 
-                imgs, atts = ld.Load_Data(batch_size,i, attributs)
+                imgs, atts = ld.Load_Data(batch_size,i, self.attributs)
                 loss_model, loss_diss, loss_ae, x_reconstruct = self.gan.train_step(imgs, atts, lambda_e)
                 print(f'epoch : {epoch} ------ iteration : {i}  ------   model_loss : {loss_model} ---------- loss_dis : {loss_diss} ------- loss_ae : {loss_ae}')
                 info(f'epoch : {epoch} ------ iteration : {i}  ------   model_loss : {loss_model} ---------- loss_dis : {loss_diss} ------- loss_ae : {loss_ae}')
