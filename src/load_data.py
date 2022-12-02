@@ -112,59 +112,14 @@ class LoadData :
         np.save(validation_path+'\\validation_images_att.npy',np.array(validation_images_attributes))
         info("Copying validation images attributes OK")
         
-        #nbr, nbr_att = len(images), len(attributes)
- 
-        # train_attributes = attributes[:int(self.train_size * nbr_att)]
-        # validation_attributes = attributes[int(self.train_size * nbr_att) : int(self.validation_size * nbr_att)]
-        # test_attributes = attributes[int(self.validation_size)* nbr_att : int(self.test_size) * nbr_att]
-        # info("Split attributes OK")
+
         
         
 
 
-
-
-class Loader():
-    def __init__ (self):
-# A revoir 
-        self.AVAILABLE_ATTR = [
-            "5_o_Clock_Shadow", "Arched_Eyebrows", "Attractive", "Bags_Under_Eyes", "Bald",
-            "Bangs", "Big_Lips", "Big_Nose", "Black_Hair", "Blond_Hair", "Blurry", "Brown_Hair",
-            "Bushy_Eyebrows", "Chubby", "Double_Chin", "Eyeglasses", "Goatee", "Gray_Hair",
-            "Heavy_Makeup", "High_Cheekbones", "Male", "Mouth_Slightly_Open", "Mustache",
-            "Narrow_Eyes", "No_Beard", "Oval_Face", "Pale_Skin", "Pointy_Nose",
-            "Receding_Hairline", "Rosy_Cheeks", "Sideburns", "Smiling", "Straight_Hair",
-            "Wavy_Hair", "Wearing_Earrings", "Wearing_Hat", "Wearing_Lipstick",
-            "Wearing_Necklace", "Wearing_Necktie", "Young"
-        ]
-
-    def normalize (self,image):  
-        return image/127.5 - 1 
-
-
-
-    def Load_Data(self, batch_size, itr, attributs, mod = 'train'):
-
-        image_path = glob.glob(PATH + '\\data\\' + mod + '\\*.jpg')
-        attributes_path = glob.glob(PATH + '\\data\\' + mod + '\\*.npy')
-        attributes = np.load(attributes_path[0])
-        ind = []
-        for i in attributs:
-            ind.append(self.AVAILABLE_ATTR.index(i)+1)
-        tmp_img = []
-        tmp_attr = []
-        
-        for i in range (batch_size):
-            tmp_img.append(self.normalize(cv2.imread(image_path[i + itr * batch_size])))
-            tmp_attr.append(attributes[i + itr*batch_size][ind])
-        return np.array(tmp_img), np.array(tmp_attr).astype(float)
 
 
 
 # if __name__ == '__main__':
-#     ld = Loader()
-#     img, attr = ld.Load_Data()
-#     print(attr.shape)
-#     print(img.shape)
-#     print(attr[0])
-#     print(input_decode(attr))
+#     ld = LoadData(0.7, 0.15, 0.15)
+#     ld.split_data()
