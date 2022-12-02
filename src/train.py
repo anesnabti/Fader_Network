@@ -56,28 +56,31 @@ class Loader():
 
 class Train:
 
-    def __init__ (self, lr, attributs):
+    def __init__ (self, lr, attributs, epochs, nbr_itr_epoch):
  
         self.image_path = glob.glob(PATH + '\\data\\train' + '\\*.jpg')
         self.lr = lr
         self.attributs = attributs
         self.nbr_attr = len(attributs)
+        self.name_attributs = "_".join(self.attributs)
+        self.epochs = epochs
+        self.nbr_itr_epoch = nbr_itr_epoch
         self.gan = GAN(encoder=Encoder(), decoder=Decoder(nbr_attr = self.nbr_attr,disc = True), discriminator=Discriminator(self.nbr_attr))
 
 
-    def result_train(self, real_image, reconstruct_image, epochs, nbr_itr_epoch, nbr_img=4):
+    def result_train(self, real_image, reconstruct_image, nbr_img=4):
         real_image = (np.array(real_image)+1)*127.5
         reconstruct_image = (np.array(reconstruct_image) + 1)*127.5 
         I, img_list = [], []
         for i in range (nbr_img):
             I.append(real_image[i])
-            for j in range (epochs):
-                I.append(reconstruct_image[j*(nbr_itr_epoch) + i])
+            for j in range (self.epochs):
+                I.append(reconstruct_image[j*(self.nbr_itr_epoch) + i])
 
         # print(type(I[1]))
         # exit()
-        for i in range (int(len(I)/(epochs+1))):
-            img_list.append(I[i*epochs + i : epochs*(i+1) + i + 1])
+        for i in range (int(len(I)/(self.epochs+1))):
+            img_list.append(I[i*self.epochs + i : self.epochs*(i+1) + i + 1])
 
         img_list = np.array(img_list)
         
@@ -92,13 +95,13 @@ class Train:
 
 
 
-    def training(self, epochs, batch_size):
-        name_attributs = "_".join(self.attributs)
+    def training(self, batch_size):
         ld = Loader()
-        nbr_itr_per_epoch = 500 #int(len(self.image_path)/batch_size)
+        # nbr_itr_per_epoch = 200 #int(len(self.image_path)/batch_size)
         real_image = []
         reconstruct_image = []
         self.gan.compile()
+        self.loss_mod, self.loss_AutoE, self.loss_dissc = [], [], []
 
         # info('Compiling Model')
         # if weights ==" ":
@@ -108,10 +111,10 @@ class Train:
 
 
         info('start training') 
-        for epoch in range (epochs):
+        for epoch in range (self.epochs):
          
-            for i in range (nbr_itr_per_epoch):
-                lambda_e = 0.0001 * (epoch*nbr_itr_per_epoch + i)/(nbr_itr_per_epoch*epochs)
+            for i in range (self.nbr_itr_epoch):
+                lambda_e = 0.0001 * (epoch*self.nbr_itr_epoch + i)/(self.nbr_itr_epoch*self.epochs)
 
                 imgs, atts = ld.Load_Data(batch_size,i, self.attributs)
                 loss_model, loss_diss, loss_ae, x_reconstruct = self.gan.train_step(imgs, atts, lambda_e)
@@ -120,16 +123,36 @@ class Train:
                 real_image.append(imgs[-1])
                 reconstruct_image.append(x_reconstruct[-1])
 
+                if (i % int(self.nbr_itr_epoch/4)) == 0:
+                    self.loss_mod.append(loss_model)
+                    self.loss_dissc.append(loss_diss)
+                    self.loss_AutoE.append(loss_ae)
 
+                
 
-        self.result_train(real_image, reconstruct_image, epochs, nbr_itr_per_epoch)
+        self.result_train(real_image, reconstruct_image)
        
-        if not os.path.exists(PATH + f"\\utils\\models\\Model_{name_attributs}_{date.today().strftime('%d-%m-%Y')}"):
-            os.makedirs(PATH + f"\\utils\\models\\Model_{name_attributs}_{date.today().strftime('%d-%m-%Y')}")
+        if not os.path.exists(PATH + f"\\utils\\models\\Model_{self.name_attributs}_{date.today().strftime('%d-%m-%Y')}"):
+            os.makedirs(PATH + f"\\utils\\models\\Model_{self.name_attributs}_{date.today().strftime('%d-%m-%Y')}")
         
-        self.gan.save_weights(PATH + f"\\utils\\models\\Model_{name_attributs}_{date.today().strftime('%d-%m-%Y')}\\")
+        self.gan.save_weights(PATH + f"\\utils\\models\\Model_{self.name_attributs}_{date.today().strftime('%d-%m-%Y')}\\")
 
         info(f"epoch: {epoch + 1} finished OK")
+
+
+    def plot_loss(self):
+        self.loss_AutoE, self.loss_dissc, self.loss_mod = np.array(self.loss_AutoE), np.array(self.loss_dissc), np.array(self.loss_mod)
+        X = np.arange(0, len(self.loss_mod))
+        plt.figure(1)
+        plt.plot(X, self.loss_mod, label = "Loss Model")
+        plt.plot(X, self.loss_dissc, label = "Loss Discriminator")
+        plt.plot(X, self.loss_AutoE, label = "Loss AutoEncoder")
+        plt.legend()
+        plt.grid()
+        plt.xlabel('Steps')
+        plt.ylabel('Loss')
+        plt.title('Evolution of losses in function of epochs')
+        plt.savefig(PATH + f"\\utils\\loss\\loss_{self.name_attributs}_{date.today().strftime('%d-%m-%Y-%Hh%M')}.png")
 
 
     # def training(self, epochs, batch_size, attributs):
