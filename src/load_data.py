@@ -120,6 +120,6 @@ class LoadData :
 
 
 
-# if __name__ == '__main__':
-#     ld = LoadData(0.7, 0.15, 0.15)
-#     ld.split_data()
+if __name__ == '__main__':
+    ld = LoadData(0.7, 0.15, 0.15)
+    ld.split_data()
