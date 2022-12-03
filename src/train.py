@@ -136,7 +136,7 @@ class Train:
             os.makedirs(PATH + f"\\utils\\models\\Model_{self.name_attributs}_{date.today().strftime('%d-%m-%Y')}")
         
         self.gan.save_weights(PATH + f"\\utils\\models\\Model_{self.name_attributs}_{date.today().strftime('%d-%m-%Y')}\\")
-
+        self.gan.save(PATH + f"\\utils\\models\\Model_{self.name_attributs}_{date.today().strftime('%d-%m-%Y')}\\gan_model.h5")
         info(f"epoch: {epoch + 1} finished OK")
 
 

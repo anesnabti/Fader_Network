@@ -7,26 +7,10 @@ Created on Mon Oct 31 09:35:49 2022
 
 import numpy as np
 import tensorflow as tf
-
-from keras.layers import Input, Dense, Reshape, Flatten, Dropout
-from keras.layers import BatchNormalization, Activation
-from keras.layers import LeakyReLU
-from keras.layers import Conv2D, Conv2DTranspose
-from keras.models import Sequential, Model
+import os
+from keras.models import Sequential, Model, load_model
 from model import Encoder, Decoder, Discriminator,AutoEncoder, input_decode
 
-"""
-class AutoEncoder(Model):
-    def __init__ (self, encoder, decoder):
-        super(AutoEncoder, self).__init__()
-        self.encoder = encoder
-        self.decoder = decoder
-    
-    def call(self, img):
-        z = self.encoder(img)
-        x_reconstruct = self.decoder(z)
-
-"""
 
 class GAN(Model):
     '''
@@ -109,6 +93,8 @@ class GAN(Model):
     def train_step(self, img, att, lamda_e):
         
         loss_ae, loss_discriminator = self.get_loss()
+
+        # ---- Train the discriminator ----------------------------------------
         self.discriminator.trainable = True
         self.ae.trainable = False
 
@@ -118,26 +104,57 @@ class GAN(Model):
             loss_diss = loss_discriminator(att, y_predict)
             loss_diss2 = 1 - loss_diss
 
+        # ---- Backward pass
+        #
+        # Retrieve gradients from gradient_tape and run one step 
+        # of gradient descent to optimize trainable weights
+
         gradient_diss = Tape.gradient(loss_diss, self.discriminator.trainable_weights)
+        # Update discriminator weights
         self.discriminator.optimizer.apply_gradients(zip(gradient_diss, self.discriminator.trainable_weights))
 
+        # ---- Train the generator --------------------------------------------
         self.discriminator.trainable = False
         self.ae.trainable = True
+
         with tf.GradientTape() as Tape:
             z, y_predict, x_reconstruct = self.combine_model(img, att)
             flipt_attr = 1 - att
             loss_reconstruct = loss_ae(img, x_reconstruct)
             loss_model = loss_reconstruct + lamda_e*loss_discriminator(flipt_attr, y_predict)
 
+        # ---- Backward pass
+        #
+        # Retrieve gradients from gradient_tape and run one step 
+        # of gradient descent to optimize trainable weights
         gradient_rec = Tape.gradient(loss_model, self.ae.trainable_weights)
+
+        # Update autoencoder weights
         self.ae.optimizer.apply_gradients(zip(gradient_rec, self.ae.trainable_weights))
+
+    
         
         return loss_model, loss_diss, loss_reconstruct, x_reconstruct
+
     
+    def save(self,filename):
+            '''Save model in 2 part'''
+            save_dir             = os.path.dirname(filename)
+            filename, _extension = os.path.splitext(filename)
+            # ---- Create directory if needed
+            os.makedirs(save_dir, mode=0o750, exist_ok=True)
+            # ---- Save models
+            self.discriminator.save( f'{filename}-discriminator.h5' )
+            self.ae.save(     f'{filename}-ae.h5'     )
 
 
-
-
+    def reload(self,filename):
+        '''Reload a 2 part saved model.
+        Note : to train it, you need to .compile() it...'''
+        filename, extension = os.path.splitext(filename)
+        self.discriminator = load_model(f'{filename}-discriminator.h5', compile=False)
+        self.ae     = load_model(f'{filename}-ae.h5'    , compile=False)
+        print('Reloaded.')
 
 
 
