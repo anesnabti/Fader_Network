@@ -14,8 +14,7 @@ import matplotlib.pyplot as plt
 Nbr_images = 202599
 log_config('train')
 image_path = glob.glob(PATH + '\\data\\train' + '\\*.jpg')
-from fader_networks import GAN
-
+from keras.models import load_model
 
 class Loader():
     def __init__ (self):
@@ -54,6 +53,8 @@ class Loader():
 
 
 
+
+
 class Train:
 
     def __init__ (self, lr, attributs, epochs, nbr_itr_epoch):
@@ -65,10 +66,10 @@ class Train:
         self.name_attributs = "_".join(self.attributs)
         self.epochs = epochs
         self.nbr_itr_epoch = nbr_itr_epoch
-        self.gan = GAN(encoder=Encoder(), decoder=Decoder(nbr_attr = self.nbr_attr,disc = True), discriminator=Discriminator(self.nbr_attr))
+        # self.gan = GAN(encoder=Encoder(), decoder=Decoder(nbr_attr = self.nbr_attr,disc = True), discriminator=Discriminator(self.nbr_attr))
 
 
-    def result_train(self, real_image, reconstruct_image, nbr_img=4):
+    def result_train(self, real_image, reconstruct_image, nbr_img=5):
         real_image = (np.array(real_image)+1)*127.5
         reconstruct_image = (np.array(reconstruct_image) + 1)*127.5 
         I, img_list = [], []
@@ -80,35 +81,39 @@ class Train:
         # print(type(I[1]))
         # exit()
         for i in range (int(len(I)/(self.epochs+1))):
-            img_list.append(I[i*self.epochs + i : self.epochs*(i+1) + i + 1])
+            img_list.append(I[i*self.epochs + i : self.epochs*(i+1) + i + 1 : 2])
 
         img_list = np.array(img_list)
         
         
         im_list = [img_list[0],
-                    img_list[1],
                     img_list[2],
-                    img_list[3]]
+                    img_list[3],
+                    img_list[4]]
         I_concat = cv2.vconcat([cv2.hconcat(im) for im in im_list])
         # plot_images(np.array(I),columns=epochs+1)
         cv2.imwrite(PATH + f"\\utils\\result_train\\train_img_{date.today().strftime('%d-%m-%Y-%Hh%M')}.png", I_concat)
 
 
 
-    def training(self, batch_size):
+    def training(self, batch_size, weights= " "):
         ld = Loader()
         # nbr_itr_per_epoch = 200 #int(len(self.image_path)/batch_size)
         real_image = []
         reconstruct_image = []
-        self.gan.compile()
-        self.loss_mod, self.loss_AutoE, self.loss_dissc = [], [], []
-
-        # info('Compiling Model')
-        # if weights ==" ":
-        #     self.gan.compile()
-        # else:
-        #     self.gan = self.gan.load_weights(weights)
-
+        # self.gan.compile()
+        self.loss_mod, self.loss_dissc = [], []
+        info('Compiling Model')
+        if weights ==" ":
+            self.gan = GAN(encoder=Encoder(), decoder=Decoder(nbr_attr = self.nbr_attr,disc = True), discriminator=Discriminator(self.nbr_attr))
+            self.gan.compile()
+        else:
+            self.encoder, self.decoder, self.discriminator = Encoder(), Decoder(), Discriminator()
+            self.encoder.load_weights(f'{weights}encoder/')
+            self.decoder.load_weights(f'{weights}decoder/')
+            self.discriminator.load_weights(f'{weights}discriminator/')
+            self.gan = GAN(encoder=self.encoder, decoder=self.decoder, discriminator=self.discriminator)
+            self.gan.compile()
 
         info('start training') 
         for epoch in range (self.epochs):
@@ -126,27 +131,29 @@ class Train:
                 if (i % int(self.nbr_itr_epoch/4)) == 0:
                     self.loss_mod.append(loss_model)
                     self.loss_dissc.append(loss_diss)
-                    self.loss_AutoE.append(loss_ae)
 
                 
 
         self.result_train(real_image, reconstruct_image)
        
-        if not os.path.exists(PATH + f"\\utils\\models\\Model_{self.name_attributs}_{date.today().strftime('%d-%m-%Y')}"):
-            os.makedirs(PATH + f"\\utils\\models\\Model_{self.name_attributs}_{date.today().strftime('%d-%m-%Y')}")
+        if not os.path.exists(PATH + f"\\utils\\models\\Model_{self.name_attributs}"):
+            os.makedirs(PATH + f"\\utils\\models\\Model_{self.name_attributs}")
         
-        self.gan.save_weights(PATH + f"\\utils\\models\\Model_{self.name_attributs}_{date.today().strftime('%d-%m-%Y')}\\")
-        self.gan.save(PATH + f"\\utils\\models\\Model_{self.name_attributs}_{date.today().strftime('%d-%m-%Y')}\\gan_model.h5")
+        # self.gan.save_weights(PATH + f"\\utils\\models\\Model_{self.name_attributs}_{date.today().strftime('%d-%m-%Y')}\\")
+        # self.gan.save_weights(PATH + f"\\utils\\models\\Model_{self.name_attributs}\\gan_model.h5")
+        self.gan.discriminator.save_weights(PATH + f"\\utils\\models\\Model_{self.name_attributs}\\discriminator\\")
+        self.gan.encoder.save_weights(PATH + f"\\utils\\models\\Model_{self.name_attributs}\\encoder\\")
+        self.gan.decoder.save_weights(PATH + f"\\utils\\models\\Model_{self.name_attributs}\\decoder\\")
+        # self.gan.save_weights( PATH + f"\\utils\\models\\Model_{self.name_attributs}\\" )
         info(f"epoch: {epoch + 1} finished OK")
 
 
     def plot_loss(self):
-        self.loss_AutoE, self.loss_dissc, self.loss_mod = np.array(self.loss_AutoE), np.array(self.loss_dissc), np.array(self.loss_mod)
+        self.loss_dissc, self.loss_mod = np.array(self.loss_dissc), np.array(self.loss_mod)
         X = np.arange(0, len(self.loss_mod))
         plt.figure(1)
         plt.plot(X, self.loss_mod, label = "Loss Model")
         plt.plot(X, self.loss_dissc, label = "Loss Discriminator")
-        plt.plot(X, self.loss_AutoE, label = "Loss AutoEncoder")
         plt.legend()
         plt.grid()
         plt.xlabel('Steps')
