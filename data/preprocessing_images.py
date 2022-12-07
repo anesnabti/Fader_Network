@@ -13,7 +13,7 @@ from time import perf_counter
 
 """
 This file aims to us to preprocess all images in our data. 
-The purpose is to crop images and resize them to (256 x 256)
+The purpose is to crop images and resized them to (256 x 256)
 """
 
 PATH = os.path.dirname(os.path.abspath(__file__))
@@ -31,32 +31,32 @@ def preprocessing_images ():
         info("OK : All images are downloded")
     
     #verifying if the folder of the images resized exists.
-    if  "img_align_celeba_resize" not in os.listdir(PATH):
-        os.mkdir(PATH + "\\img_align_celeba_resize")
+    if  "img_align_celeba_resized" not in os.listdir(PATH):
+        os.mkdir(PATH + "\\img_align_celeba_resized")
         info("img_align_celeba_resized folder is created")
         print("img_align_celeba_resized folder is created")
     
-    if len(os.listdir(PATH + "\\img_align_celeba_resize")) == 0:
-        info("OK : ../../img_align_celba_resize is empty, we will start resizing images ")
-        print("OK : ../../img_align_celba_resize is empty, we will start resizing images ")
+    if len(os.listdir(PATH + "\\img_align_celeba_resized")) == 0:
+        info("OK : ../../img_align_celba_resized is empty, we will start resizing images ")
+        print("OK : ../../img_align_celba_resized is empty, we will start resizing images ")
 
-    elif len(os.listdir(PATH + "\\img_align_celeba_resize")) == Nbr_images  : 
+    elif len(os.listdir(PATH + "\\img_align_celeba_resized")) == Nbr_images  : 
         info("OK : All resized images are downloded ")
         print("OK : All resized images are downloded ")
         return
 
     else : 
         debug("You do not have all images resized ! Please Check")
-        shutil.rmtree(PATH + "\\img_align_celeba_resize")
-        debug("Suppression of ../../img_align_celeba_resize and create a new empty folder")
-        os.makedirs(PATH + "\\img_align_celeba_resize")
+        shutil.rmtree(PATH + "\\img_align_celeba_resized")
+        debug("Suppression of ../../img_align_celeba_resized and create a new empty folder")
+        os.makedirs(PATH + "\\img_align_celeba_resized")
         info('Creation of new folder OK, please restart the program')
         print('Creation of new folder OK, please restart the program')
         return
     
     
     print("############ Reading images ##############")
-    print(f'Resized operation will take about {5.80*Nbr_images/(1000*60)} minutes ...')
+    print(f'resize operation will take about {5.80*Nbr_images/(1000*60)} minutes ...')
     tps1 = perf_counter()
     for i in range (1, Nbr_images + 1) :
         if i % 10000 == 0:
@@ -67,9 +67,9 @@ def preprocessing_images ():
             debug("Error cropped image")
             raise Exception (" Image %06i%  .does not been cropped correctly % i")
       
-        I_resize = cv2.resize(I, (SIZE_IMG, SIZE_IMG), interpolation=cv2.INTER_LANCZOS4)
-        assert I_resize.shape == (SIZE_IMG, SIZE_IMG, 3)
-        cv2.imwrite(PATH + "\\img_align_celeba_resize\\%06i.jpg" % i, I_resize)
+        I_resized = cv2.resize(I, (SIZE_IMG, SIZE_IMG), interpolation=cv2.INTER_LANCZOS4)
+        assert I_resized.shape == (SIZE_IMG, SIZE_IMG, 3)
+        cv2.imwrite(PATH + "\\img_align_celeba_resized\\%06i.jpg" % i, I_resized)
     info("Save resized images OK")
     print("Save resized images OK")
     tps2 = perf_counter()
@@ -116,5 +116,5 @@ def preprocessing_labels():
 
 
 if __name__ == '__main__':
-    preprocessing_images()
+    # preprocessing_images()
     preprocessing_labels()
