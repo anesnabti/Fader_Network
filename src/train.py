@@ -8,13 +8,12 @@ from datetime import datetime as date
 from fader_networks import GAN
 from model import Encoder, Decoder, Discriminator
 sys.path.append( os.path.dirname(os.path.abspath(__file__))[:-3] + "\\cfg")
-from config import debug, info, warning, log_config, PATH, save_loss
+from config import debug, info, warning, log_config, PATH
 import glob
 import matplotlib.pyplot as plt
 Nbr_images = 202599
 log_config('train')
 image_path = glob.glob(PATH + '\\data\\train' + '\\*.jpg')
-from keras.models import load_model
 
 class Loader():
     def __init__ (self):
@@ -97,6 +96,18 @@ class Train:
 
 
     def training(self, batch_size, weights= " "):
+        if not os.path.exists(PATH + f"\\utils\\models\\Model_{self.name_attributs}"):
+            os.makedirs(PATH + f"\\utils\\models\\Model_{self.name_attributs}")
+
+        if not os.path.exists(PATH + f"\\utils\\models\\Model_{self.name_attributs}\\encoder"):
+            os.makedirs(PATH + f"\\utils\\models\\Model_{self.name_attributs}\\encoder")
+
+        if not os.path.exists(PATH + f"\\utils\\models\\Model_{self.name_attributs}\\decoder"):
+            os.makedirs(PATH + f"\\utils\\models\\Model_{self.name_attributs}\\decoder")
+
+        if not os.path.exists(PATH + f"\\utils\\models\\Model_{self.name_attributs}\\discriminator"):
+            os.makedirs(PATH + f"\\utils\\models\\Model_{self.name_attributs}\\discriminator")
+
         ld = Loader()
         # nbr_itr_per_epoch = 200 #int(len(self.image_path)/batch_size)
         real_image = []
@@ -134,17 +145,13 @@ class Train:
 
                 
 
-        self.result_train(real_image, reconstruct_image)
-       
-        if not os.path.exists(PATH + f"\\utils\\models\\Model_{self.name_attributs}"):
-            os.makedirs(PATH + f"\\utils\\models\\Model_{self.name_attributs}")
+            self.gan.discriminator.save_weights(PATH + f"\\utils\\models\\Model_{self.name_attributs}\\discriminator\\")
+            self.gan.encoder.save_weights(PATH + f"\\utils\\models\\Model_{self.name_attributs}\\encoder\\")
+            self.gan.decoder.save_weights(PATH + f"\\utils\\models\\Model_{self.name_attributs}\\decoder\\")
+
         
-        # self.gan.save_weights(PATH + f"\\utils\\models\\Model_{self.name_attributs}_{date.today().strftime('%d-%m-%Y')}\\")
-        # self.gan.save_weights(PATH + f"\\utils\\models\\Model_{self.name_attributs}\\gan_model.h5")
-        self.gan.discriminator.save_weights(PATH + f"\\utils\\models\\Model_{self.name_attributs}\\discriminator\\")
-        self.gan.encoder.save_weights(PATH + f"\\utils\\models\\Model_{self.name_attributs}\\encoder\\")
-        self.gan.decoder.save_weights(PATH + f"\\utils\\models\\Model_{self.name_attributs}\\decoder\\")
-        # self.gan.save_weights( PATH + f"\\utils\\models\\Model_{self.name_attributs}\\" )
+        self.result_train(real_image, reconstruct_image)
+
         info(f"epoch: {epoch + 1} finished OK")
 
 
