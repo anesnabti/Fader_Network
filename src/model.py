@@ -32,7 +32,6 @@ class Encoder(Model):
 
         self.output_layer = Conv2D(max_filter, (4,4),strides=(2,2),padding='same')
 
-    
     def call(self, inputs, training=None, **kwargs):
         x = self.input_layer(inputs)
         x=BatchNormalization()(x)
@@ -59,7 +58,7 @@ class Discriminator(Model):
         self.layer1 = Conv2DTranspose(512,(4,4),strides=(2,2),padding='same', input_shape = self.inputs_shape)
         self.layer2 = Dense(512, input_shape=(512,), activation=None)
         self.layer3 = Dense(n_attr,input_shape=(512,), activation=None)
-        
+
     def call(self, inputs, training=None, **kwargs):
         x = self.layer1(inputs)
         x = BatchNormalization()(x)
@@ -95,7 +94,7 @@ class Decoder(Model):
             self.hid_layer.append(Conv2DTranspose(i, (4,4),strides=(2,2),padding='same'))
         self.output_layer = Conv2DTranspose(img_fm, (4,4),strides=(2,2),padding='same')
 
- 
+
     def call(self, inputs, training=None, **kwargs):
 
         x = self.input_layer(inputs)
@@ -149,6 +148,7 @@ class AutoEncoder(Model):
         super(AutoEncoder, self).__init__()
         self.encoder = encoder
         self.decoder = decoder
+    
     
     def call(self, input, att = None):
         '''
