@@ -3,6 +3,7 @@ import numpy as np
 import cv2
 import os 
 import sys
+import re
 import pathlib
 from datetime import datetime as date
 from fader_networks import GAN
@@ -37,6 +38,7 @@ class Loader():
     def Load_Data(self, batch_size, itr, attributs, mod = 'train'):
 
         image_path = glob.glob(PATH + '\\data\\' + mod + '\\*.jpg')
+        image_path = sorted(image_path, key=lambda x:float(re.findall("(\d+)",x)[0]))
         attributes_path = glob.glob(PATH + '\\data\\' + mod + '\\*.npy')
         attributes = np.load(attributes_path[0])
         ind = []
