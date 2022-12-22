@@ -45,7 +45,8 @@ class GAN(Model):
         """
         #img = img.reshape(-1,256,256,3)
         z = self.encoder(img)
-        y_predict = self.discriminator(z)
+        y_predict = self.discriminator(self.gaussian_noise(z))
+        # y_predict = self.discriminator(z)
         attr = 1 - att
         z_ = input_decode(z, attr)
         x_reconstruct = self.decoder(z_)
@@ -55,8 +56,8 @@ class GAN(Model):
 
     def get_loss(self):
         loss_ae = tf.keras.losses.MeanSquaredError()
-        loss_discrimintor = tf.keras.losses.MeanSquaredError()                      # pttr à modifier
-
+        loss_discrimintor = tf.keras.losses.BinaryCrossentropy()                      # pttr à modifier
+        # loss_discrimintor = tf.keras.losses.CategoricalCrossentropy()
         return loss_ae, loss_discrimintor
 
 
@@ -89,9 +90,8 @@ class GAN(Model):
     #         self.ae.load_weights(weights[1])
     
 
-    # @tf.function
     def train_step(self, img, att, lamda_e):
-        
+
         loss_ae, loss_discriminator = self.get_loss()
 
         # ---- Train the discriminator ----------------------------------------
@@ -136,24 +136,31 @@ class GAN(Model):
         
         return loss_model, loss_diss, loss_reconstruct, x_reconstruct
 
+
+    def gaussian_noise(self, z):
+        shape = z.shape
+        gauss = np.random.normal(0, 0.05, shape)
+        nLatent_R = z + gauss
+        return nLatent_R
     
-    def save(self,filename):
-            '''Save model in 2 part'''
-            save_dir             = os.path.dirname(filename)
-            filename, _extension = os.path.splitext(filename)
-            # ---- Create directory if needed
-            os.makedirs(save_dir, mode=0o750, exist_ok=True)
-            # ---- Save models
-            self.discriminator.save( f'{filename}-discriminator.h5' )
-            self.ae.save(     f'{filename}-ae.h5'     )
+    # def save(self,filename):
+    #         '''Save model in 2 part'''
+    #         save_dir             = os.path.dirname(filename)
+    #         filename, _extension = os.path.splitext(filename)
+    #         # ---- Create directory if needed
+    #         os.makedirs(save_dir, mode=0o750, exist_ok=True)
+    #         # ---- Save models
+    #         self.discriminator.save_weights( f'{filename}-discriminator.h5')
+    #         self.ae.save_weights(     f'{filename}-ae.h5'     )
 
 
     def reload(self,filename):
         '''Reload a 2 part saved model.
         Note : to train it, you need to .compile() it...'''
-        filename, extension = os.path.splitext(filename)
-        self.discriminator = load_model(f'{filename}-discriminator.h5', compile=False)
-        self.ae     = load_model(f'{filename}-ae.h5'    , compile=False)
+        # filename, extension = os.path.splitext(filename)
+        self.discriminator.load_weights(f'{filename}')
+        # gan_model-discriminator.h5') , compile=False
+        self.ae.load_weights(f'{filename}gan_model-ae.h5'    ) # , compile=False
         print('Reloaded.')
 
 
