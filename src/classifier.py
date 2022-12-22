@@ -1,4 +1,3 @@
-
 import numpy as np
 import tensorflow as tf
 from keras.layers import Input, Dense
@@ -28,7 +27,6 @@ class Classifier(Model):
 
         super(Classifier,self).__init__()
 
-        # self.shape = input_shape
         self.encoder = Encoder()
         self.conv2d_layer = tf.keras.layers.Conv2D(512, 4, 2, 'same', activation=LeakyReLU(0.2)) 
         self.bach_normalisation = tf.keras.layers.BatchNormalization()
@@ -123,5 +121,4 @@ if __name__ == '__main__':
     # parser.add_argument("--n_images", type = int, default = 202599, help = "Number of images")
 
     classi = classification()
-    classi.training(4,7)
-    print('ok')
+    classi.training(4,32)
